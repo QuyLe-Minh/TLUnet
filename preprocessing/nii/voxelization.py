@@ -1,23 +1,19 @@
 import torch
-from preprocessing.filter import *
+from preprocessing.nii.filter import *
 import torch.nn.functional as f
-import pydicom as dcm
+import nibabel as nib
 from math import *
 import numpy as np
 import os
 
-def custom_sort(item):
-    return int(item.split('_')[1])
-
-def make_mask(folder_path, cube):
-    files = os.listdir(folder_path)
-    files.sort(key = custom_sort)
+def make_mask(path, cube):
+    seg = nib.load(path)
+    header = seg.header
+    h_seg, w_seg, d_seg = header.get_data_shape()
     _, h, w, d = cube.shape
-    seg = torch.empty((len(files), h, w))
-    for i, file in enumerate(files):
-        path = os.path.join(folder_path, file)
-        arr = read_xray(path)
-        arr = torch.tensor((arr > 0).astype(np.uint8)).reshape(1,1, 512, 512)
+    seg = torch.empty((d_seg, h, w))
+    for i in range(d_seg):
+        arr = torch.tensor(seg.get_fdata()).reshape(1, 1, 512, 512)
         arr = f.interpolate(arr, scale_factor = (h/512, w/512), mode = "nearest")
         seg[i] = arr.reshape(h, w)
 
@@ -50,30 +46,28 @@ def segmentation(folder_path, cube):
     seg = seg.to(torch.uint8)
     return seg
 
-def make_cube(folder_path):
+def make_cube(path):
     """Create isometric cube
 
     Returns:
         cube: shape (D, H, W)
     """
-    files = os.listdir(folder_path)
-    files.sort(key = custom_sort)
-    data = dcm.dcmread(os.path.join(folder_path, files[0]))
-    row_space, col_space = data.PixelSpacing
-    thickness = data.SliceThickness
+    loaded = nib.load(path)
+    header = loaded.header
+    row_space, col_space, thickness = header.get_zooms()
+    h, w, d = header.get_data_shape()
+    original_cube = loaded.get_fdata()  #numpy
     
     anisotropic_diffusion = apply_anisotropic_diffusion()
     
-    cube = torch.empty((len(files), floor(row_space * 512), floor(col_space * 512)))
-    for i, file in enumerate(files):
-        path = os.path.join(folder_path, file)
-        data = dcm.dcmread(path)
-        arr = data.pixel_array
+    cube = torch.empty((d, floor(row_space * h), floor(col_space * w)))
+    for i in range(d):
+        arr = original_cube[:, :, i]
         arr = window_image(arr)
         
         arr = filter(anisotropic_diffusion, arr)
 
-        arr = arr.reshape(1, 1, 512, 512)
+        arr = arr.reshape(1, 1, h, w)
         arr = f.interpolate(arr, scale_factor = (row_space, col_space))
         arr = arr.reshape(arr.shape[-2:])
 
@@ -81,14 +75,14 @@ def make_cube(folder_path):
         
     return cube, thickness
 
-def voxelization(folder_path):
+def voxelization(path):
     """Voxelization
 
     Returns:
         cube: shape (1, H, W, D)
     """
     #make cube
-    cube, thickness = make_cube(folder_path)
+    cube, thickness = make_cube(path)
     d, h, w = cube.shape
     cube = cube.unsqueeze(1)
     cube = cube.permute(2, 3, 0, 1)

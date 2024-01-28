@@ -1,10 +1,7 @@
-from preprocessing.augmentation import *
-from preprocessing.voxelization import *
+from preprocessing.dicom.augmentation import *
+from preprocessing.dicom.voxelization import *
 
-def custom_sort(item):
-    return int(item.split('_')[1])
-
-def read(folder_path):
+def read_ircadb(folder_path):
     sample = 0
     dataset = {}
     data_path = os.path.join(folder_path, "data")
@@ -25,4 +22,5 @@ def read(folder_path):
             dataset[key_value] = transformed[i]["label"].to(torch.uint8)
             torch.save(dataset, 'dataset.pth')
             sample += 1 
+        
         

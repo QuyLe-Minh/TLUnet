@@ -1,5 +1,5 @@
 from monai.transforms import *
-from preprocessing.voxelization import *
+from preprocessing.dicom.voxelization import *
 
 def augmented(image, label):
     transform = Compose([
