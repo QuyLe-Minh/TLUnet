@@ -1,5 +1,5 @@
 import torch
-from filter import *
+from preprocessing.filter import *
 import torch.nn.functional as f
 import pydicom as dcm
 from math import *
