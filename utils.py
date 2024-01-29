@@ -7,14 +7,16 @@ def one_hot_encoder(input, n_classes):
 
     Args:
         input (torch tensor): B, C = 1, H, W, D
-    """
-    input = input.numpy()
-    b, c, h, w, d = input.shape
-    one_hot = np.zeros((b, n_classes, h, w, d))
-    one_hot[:, 0, :, :, :] = np.where(input == 0, 1, 0)
-    one_hot[:, 1, :, :, :] = np.where(input == 1, 1, 0)
     
-    return torch.tensor(one_hot)
+    Returns:
+        one hot: cuda
+    """
+    b, c, h, w, d = input.shape
+    one_hot = torch.zeros((b, n_classes, h, w, d))
+    one_hot[:, 0, :, :, :] = torch.where(input == 0, 1, 0)
+    one_hot[:, 1, :, :, :] = torch.where(input == 1, 1, 0)
+    
+    return one_hot.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
 def init_weights(m):
   if isinstance(m, nn.Conv3d):

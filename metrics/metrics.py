@@ -1,5 +1,4 @@
 import torch
-import numpy as np
 from utils import one_hot_encoder
 
 def iou(pred, gt):
@@ -9,7 +8,7 @@ def iou(pred, gt):
         pred (_Tensor_): cuda:0
         gt (_Tensor_): cuda:0
     """
-    mask = one_hot_encoder(pred).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    mask = one_hot_encoder(pred)
     eps = 1e-5
     intersect = torch.sum(mask * gt)
     union = torch.sum(pred + gt)
@@ -23,7 +22,7 @@ def dice(pred, gt):
         pred (_Tensor_): cuda:0
         gt (_Tensor_): cuda:0
     """
-    mask = one_hot_encoder(pred).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    mask = one_hot_encoder(pred)
     eps = 1e-5
     intersect = torch.sum(mask * gt)
     union = torch.sum(pred + gt)
@@ -37,7 +36,7 @@ def acc(pred, gt):
         pred (_Tensor_): cuda:0
         gt (_Tensor_): cuda:0
     """
-    mask = one_hot_encoder(pred).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    mask = one_hot_encoder(pred)
     return torch.mean(mask == gt)            
     
     
