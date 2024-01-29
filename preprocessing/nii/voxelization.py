@@ -15,7 +15,7 @@ def make_mask(path, cube):
     seg = torch.empty((d_seg, h, w))
     for i in range(d_seg):
         arr = torch.tensor(segmentation[:, :, i]).reshape(1, 1, 512, 512)
-        arr = f.interpolate(arr, scale_factor = (h/512, w/512), mode = "nearest")
+        arr = f.interpolate(arr, scale_factor = (h/512, w/512))
         seg[i] = arr.reshape(h, w)
 
     return seg

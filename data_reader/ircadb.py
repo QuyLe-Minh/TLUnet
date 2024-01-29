@@ -47,29 +47,41 @@ from preprocessing.dicom.voxelization import *
 # print("-----------------------------SUCCESS----------------------")
 
 def read_ircadb(folder_path):
-    sample = 0
+    sample_dataset = 0
+    sample_val = 0
     dataset = {}
+    val = {}
     data_path = os.path.join(folder_path, "data")
     seg_path = os.path.join(folder_path, "seg")
     for patient in os.listdir(data_path):
-        if patient in ["3Dircadb1.1", "3Dircadb1.13"]:
-            continue
+        if patient in ["3Dircadb1.1", "3Dircadb1.13", "3Dircadb1.8"]:
+            mode = "val.pth"
+        else:
+            mode = "dataset.pth"
         data_patient = os.path.join(data_path, patient)
         seg_patient = os.path.join(seg_path, patient)
         
         cube = voxelization(data_patient)
         seg = segmentation(seg_patient, cube)
-        
-        transformed = augmented(cube, seg)
-        for i in range(len(transformed)):
-            key_data = f"data_{sample}"
-            key_value = f"value_{sample}"
 
-            dataset[key_data] = transformed[i]["image"]
-            dataset[key_value] = transformed[i]["label"].to(torch.uint8)
-            torch.save(dataset, 'dataset/dataset.pth')
-            sample += 1 
+        if mode == "dataset.pth":
+            transformed = augmented(cube, seg)
+            for i in range(len(transformed)):
+                key_data = f"data_{sample_dataset}"
+                key_value = f"value_{sample_dataset}"
+    
+                dataset[key_data] = transformed[i]["image"]
+                dataset[key_value] = transformed[i]["label"].to(torch.uint8)
+                torch.save(dataset, 'dataset/' + mode)
+                sample_dataset += 1 
+        else:
+            key_data = f"data_{sample_val}"
+            key_value = f"value_{sample_val}"
+            val[key_data] = cube
+            val[key_value] = seg
+            torch.save(val, 'dataset/' + mode)
+            sample_val += 1
 
-        print(f"Successful saving patient: {patient}. Current sample: {sample}")
+        print(f"Successful saving patient: {patient}. Current sample: {sample_dataset}. Current val: {sample_val}")
         
         
