@@ -34,7 +34,7 @@ def read_lits(folder_path):
             key_data = f"data_{sample_val}"
             key_val = f"value_{sample_val}"
             val[key_data] = cube
-            val[key_val] = seg
+            val[key_val] = seg.to(torch.uint8)
             torch.save(val, "dataset/" + mode)
             sample_val +=1
             

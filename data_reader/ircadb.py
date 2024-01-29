@@ -78,7 +78,7 @@ def read_ircadb(folder_path):
             key_data = f"data_{sample_val}"
             key_value = f"value_{sample_val}"
             val[key_data] = cube
-            val[key_value] = seg
+            val[key_value] = seg.to(torch.uint8)
             torch.save(val, 'dataset/' + mode)
             sample_val += 1
 
