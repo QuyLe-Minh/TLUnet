@@ -7,7 +7,7 @@ class ConvBlock(nn.Module):
         self.conv = nn.Sequential(
             nn.Conv3d(in_channels, out_channels, kernel, 1, padding="same"),
             nn.BatchNorm3d(out_channels),
-            nn.ELU()
+            nn.GELU()
         )
     
     def forward(self, x):
@@ -19,7 +19,7 @@ class DeconvBlock(nn.Module):
         super().__init__()
         self.conv1 = ConvBlock(3, in_channels, in_channels)
         self.conv2 = ConvBlock(3, in_channels, in_channels)
-        self.deconv = nn.ConvTranspose3d(in_channels, out_channels, 2, stride = 2, padding=2)   #check shape
+        self.deconv = nn.ConvTranspose3d(in_channels, out_channels, 2, stride = 2)
         
     def forward(self, expansive, contractive):
         fusion = torch.cat([expansive, contractive], dim = 1)
@@ -46,7 +46,7 @@ class EncoderBlock(nn.Module):
         return x, skip
         
 class TLUnet(nn.Module):
-    def __init__(self, n_classes = 1):
+    def __init__(self, n_classes = 2):
         super().__init__()
         filters = 32
         n_deconv = 96
@@ -58,7 +58,7 @@ class TLUnet(nn.Module):
         self.bottle_neck = nn.Sequential(
             ConvBlock(3, filters * 4, filters * 8),
             ConvBlock(3, filters * 8, filters * 8),
-            nn.ConvTranspose3d(filters * 8, n_deconv, 2, 2, 2)    #check shape
+            nn.ConvTranspose3d(filters * 8, n_deconv, 2, 2)
         )
         
         self.deconv1 = DeconvBlock(filters * 4, n_deconv//2)
@@ -66,24 +66,14 @@ class TLUnet(nn.Module):
         self.deconv3 = DeconvBlock(filters, n_deconv//8)
         
         self.head = nn.Sequential(
-            nn.Conv3d(filters//2, filters//2, 3, padding = "same"),
-            nn.Conv3d(filters//2, filters//2, 3, padding = "same"),
-            nn.Conv3d(filters//2, n_classes, 1),
-            nn.Sigmoid()
+            ConvBlock(3, filters//2, filters//2),
+            ConvBlock(3, filters//2, filters//2),
+            nn.Conv3d(filters//2, n_classes, 1)
         )
         
-        self.ds1 = nn.Sequential(
-            nn.Conv3d(n_deconv//2, n_classes, 1),
-            nn.Sigmoid()
-        )
-        self.ds2 = nn.Sequential(
-            nn.Conv3d(n_deconv//4, n_classes, 1),
-            nn.Sigmoid()
-        )
-        self.ds3 = nn.Sequential(
-            nn.Conv3d(n_deconv//8, n_classes, 1),
-            nn.Sigmoid()
-        )        
+        self.ds1 = nn.Conv3d(n_deconv//2, n_classes, 1)
+        self.ds2 = nn.Conv3d(n_deconv//4, n_classes, 1)
+        self.ds3 = nn.Conv3d(n_deconv//8, n_classes, 1)  
     def forward(self, input):
         x1, skip1 = self.eblock1(input)
         x2, skip2 = self.eblock2(x1)
