@@ -2,6 +2,16 @@ import numpy as np
 import torch
 from torch import nn
 
+class Config:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    batch_size = 10
+    epochs = 2
+    n_classes = 2
+    patience = 5
+    train = torch.load("dataset/dataset.pth")
+    val = torch.load("dataset/val.pth")
+    mode = "training"
+
 def one_hot_encoder(input, n_classes):
     """One hot encode
 
