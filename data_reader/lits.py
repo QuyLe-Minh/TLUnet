@@ -3,7 +3,7 @@ from preprocessing.nii.voxelization import *
 
 def read_lits(folder_path):
     sample_dataset = 850
-    sample_val = 150
+    sample_val = 3
     dataset = {}
     val = {}
     files = os.listdir(folder_path)
