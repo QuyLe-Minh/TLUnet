@@ -1,13 +1,6 @@
 import torch
 import numpy as np
-
-def one_hot_encoder(pred):
-    mask = np.zeros(pred.shape)
-    one_hot = pred.argmax(1).cpu().detach()
-    mask[:, 0, :, :] = np.where(one_hot == 0, 1, 0)
-    mask[:, 1, :, :] = np.where(one_hot == 1, 1, 0)
-    mask[:, 2, :, :] = np.where(one_hot == 2, 1, 0)
-    return torch.tensor(mask)
+from utils import one_hot_encoder
 
 def iou(pred, gt):
     """Calculate iou score

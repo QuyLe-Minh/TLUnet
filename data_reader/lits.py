@@ -9,7 +9,7 @@ def read_lits(folder_path):
     files = os.listdir(folder_path)
     num_samples = len(files)//2
     for i in range(num_samples):
-        if i <= 50:
+        if i < 40:
             mode = "val.pth"
         else:
             mode = "dataset.pth"
@@ -39,4 +39,3 @@ def read_lits(folder_path):
             sample_val +=1
             
         print(f"LITS: Successful saving patient: {i}. Current sample: {sample_dataset}. Current val: {sample_val}")
-    return sample_dataset, sample_val
