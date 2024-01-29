@@ -4,8 +4,6 @@ from preprocessing.nii.voxelization import *
 def read_lits(folder_path):
     sample_dataset = 850
     sample_val = 3
-    dataset = {}
-    val = {}
     files = os.listdir(folder_path)
     num_samples = len(files)//2
     for i in range(num_samples):
@@ -21,6 +19,7 @@ def read_lits(folder_path):
         seg = torch.clamp(seg, min = 0, max = 1)
 
         if mode == "dataset.pth":
+            dataset = {}
             transformed = augmented(cube, seg)
             for j in range(len(transformed)):
                 key_data = f"data_{sample_dataset}"
@@ -31,6 +30,7 @@ def read_lits(folder_path):
                 torch.save(dataset, 'dataset/' + mode)
                 sample_dataset += 1
         else:
+            val = {}
             key_data = f"data_{sample_val}"
             key_val = f"value_{sample_val}"
             val[key_data] = cube
