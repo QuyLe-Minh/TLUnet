@@ -2,7 +2,7 @@ from preprocessing.nii.augmentation import *
 from preprocessing.nii.voxelization import *
 
 def read_lits(folder_path):
-    sample = 1000
+    sample = 900
     dataset = {}
     files = os.listdir(folder_path)
     num_samples = len(files)//2
@@ -21,6 +21,8 @@ def read_lits(folder_path):
 
             dataset[key_data] = transformed[i]["image"]
             dataset[key_value] = transformed[i]["label"].to(torch.uint8)
-            torch.save(dataset, 'dataset.pth')
+            torch.save(dataset, 'dataset/dataset.pth')
             sample += 1
+            
+        print(f"LITS: Successful saving patient: {i}. Current sample: {sample}")
     return sample

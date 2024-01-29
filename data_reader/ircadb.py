@@ -65,7 +65,9 @@ def read_ircadb(folder_path):
 
             dataset[key_data] = transformed[i]["image"]
             dataset[key_value] = transformed[i]["label"].to(torch.uint8)
-            torch.save(dataset, 'dataset.pth')
+            torch.save(dataset, 'dataset/dataset.pth')
             sample += 1 
+
+        print(f"Successful saving patient: {patient}. Current sample: {sample}")
         
         
