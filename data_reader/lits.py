@@ -5,13 +5,14 @@ def read_lits(folder_path):
     sample = 1000
     dataset = {}
     files = os.listdir(folder_path)
-    num_samples = len(files//2)
+    num_samples = len(files)//2
     for i in range(num_samples):
         data_path = os.path.join(folder_path, f"volume-{i}.nii")
         seg_path = os.path.join(folder_path, f"segmentation-{i}.nii")
         
         cube = voxelization(data_path)
         seg = segmentation(seg_path, cube)
+        seg = torch.clamp(seg, min = 0, max = 1)
         
         transformed = augmented(cube, seg)
         for i in range(len(transformed)):
@@ -22,4 +23,4 @@ def read_lits(folder_path):
             dataset[key_value] = transformed[i]["label"].to(torch.uint8)
             torch.save(dataset, 'dataset.pth')
             sample += 1
-    return sample 
+    return sample

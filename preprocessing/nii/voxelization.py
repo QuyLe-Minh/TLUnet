@@ -7,13 +7,14 @@ import numpy as np
 import os
 
 def make_mask(path, cube):
-    seg = nib.load(path)
-    header = seg.header
+    segmentation = nib.load(path)
+    header = segmentation.header
     h_seg, w_seg, d_seg = header.get_data_shape()
+    segmentation = segmentation.get_fdata()
     _, h, w, d = cube.shape
     seg = torch.empty((d_seg, h, w))
     for i in range(d_seg):
-        arr = torch.tensor(seg.get_fdata()).reshape(1, 1, 512, 512)
+        arr = torch.tensor(segmentation[:, :, i]).reshape(1, 1, 512, 512)
         arr = f.interpolate(arr, scale_factor = (h/512, w/512), mode = "nearest")
         seg[i] = arr.reshape(h, w)
 
