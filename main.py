@@ -8,6 +8,7 @@ from utils import Config
 
 if __name__ == "__main__":
     if not os.path.exists("dataset/dataset.pth"):
+        print("Start creating dataset")
         read_ircadb("dataset/ircadb")
         read_lits("dataset/LITS17")
     

@@ -72,7 +72,7 @@ def make_cube(path):
         arr = f.interpolate(arr, scale_factor = (row_space, col_space))
         arr = arr.reshape(arr.shape[-2:])
 
-        cube[i] = torch.tensor(arr)
+        cube[i] = arr
         
     return cube, thickness
 

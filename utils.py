@@ -1,6 +1,6 @@
-import numpy as np
 import torch
 from torch import nn
+from math import *
 
 class Config:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -33,3 +33,57 @@ def init_weights(m):
     torch.nn.init.kaiming_normal(m.weight)
     if m.bias is not None:
       torch.nn.init.zeros_(m.bias)
+      
+      
+def manual_crop(X):
+    X_cropped_collection = []
+    _, _, h, w, d = X.shape
+    for i in range(ceil(h/192)):
+        if (i+1)*192 > h:
+            start_i = 512-192
+        else:
+            start_i = i*192
+        for j in range(ceil(w/192)):
+            if (j+1)*192 > w:
+                start_j = w - 192
+            else:
+                start_j = j * 192
+            for k in range(ceil(d/64)):
+                if (k+1)*64 > d:
+                    start_k = d - 64
+                else:
+                    start_k = k*64
+                X_cropped = X[:, :, start_i : start_i+192, start_j : start_j+192, start_k : start_k+64]
+                X_cropped_collection.append(X_cropped)
+                
+    return X_cropped_collection
+
+def concat(y, y_cropped_collection):
+    """Concat pieces of cube
+
+    Args:
+        y (ground truth): b, c, 512, 512, d
+        y_cropped_collection (pred): collection of cubes: n, b_, c_, 192, 192, 64
+    """
+    b, c, h, w, d = y.shape
+    pred = torch.empty(y.shape)
+    sample = 0
+    for i in range(ceil(h/192)):
+        if (i+1)*192 > h:
+            start_i = 512-192
+        else:
+            start_i = i*192
+        for j in range(ceil(w/192)):
+            if (j+1)*192 > w:
+                start_j = w - 192
+            else:
+                start_j = j * 192
+            for k in range(ceil(d/64)):
+                if (k+1)*64 > d:
+                    start_k = d - 64
+                else:
+                    start_k = k*64
+                pred[:, :, start_i:start_i+192, start_j:start_j+192, start_k:start_k+64] = y_cropped_collection[sample]
+                sample += 1
+                
+    return pred
