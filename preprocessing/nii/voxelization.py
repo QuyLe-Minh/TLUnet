@@ -42,7 +42,7 @@ def segmentation(folder_path, cube):
     grid = torch.stack((mx, my), 2).permute(1, 0, 2).unsqueeze(0)
     grid =  grid.repeat(h, 1, 1, 1)
 
-    seg = f.grid_sample(seg, grid, mode = "nearest")
+    seg = f.grid_sample(seg, grid)
     seg = seg.permute(3, 0, 1, 2)
     seg = seg.to(torch.uint8)
     return seg

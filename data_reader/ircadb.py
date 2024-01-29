@@ -52,6 +52,8 @@ def read_ircadb(folder_path):
     data_path = os.path.join(folder_path, "data")
     seg_path = os.path.join(folder_path, "seg")
     for patient in os.listdir(data_path):
+        if patient in ["3Dircadb1.1", "3Dircadb1.13"]:
+            continue
         data_patient = os.path.join(data_path, patient)
         seg_patient = os.path.join(seg_path, patient)
         

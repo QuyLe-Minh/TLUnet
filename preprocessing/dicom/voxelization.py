@@ -18,7 +18,7 @@ def make_mask(folder_path, cube):
         path = os.path.join(folder_path, file)
         arr = read_xray(path)
         arr = torch.tensor((arr > 0).astype(np.uint8)).reshape(1,1, 512, 512)
-        arr = f.interpolate(arr, scale_factor = (h/512, w/512), mode = "nearest")
+        arr = f.interpolate(arr, scale_factor = (h/512, w/512))
         seg[i] = arr.reshape(h, w)
 
     return seg
