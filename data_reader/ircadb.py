@@ -60,8 +60,7 @@ def read_ircadb(folder_path):
         data_patient = os.path.join(data_path, patient)
         seg_patient = os.path.join(seg_path, patient)
         
-        cube = voxelization(data_patient)
-        seg = segmentation(seg_patient, cube)
+        cube, seg = run(data_patient, seg_patient)
 
         if mode == "dataset.pth":
             transformed = augmented(cube, seg)

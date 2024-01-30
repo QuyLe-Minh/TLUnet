@@ -5,31 +5,33 @@ import pydicom as dcm
 from math import *
 import numpy as np
 import os
+from monai.transforms import Resized
 
 def custom_sort(item):
     return int(item.split('_')[1])
 
-def segmentation(folder_path, cube):
+def segmentation(folder_path):
+    """Create non-uniform cube
+
+    Returns:
+        seg: torch tensor shape (1, H,W,D)
+    """
     files = os.listdir(folder_path)
     files.sort(key = custom_sort)
-    _, h, w, d = cube.shape
-    seg = torch.empty((1, 1, h, w, len(files)))
+    seg = torch.empty((1, 512, 512, len(files)))
     for i, file in enumerate(files):
         path = os.path.join(folder_path, file)
         arr = read_xray(path)
-        arr = torch.tensor((arr > 0).astype(np.uint8)).reshape(1,1, 512, 512)
-        arr = f.interpolate(arr, size = (h, w))
-        seg[:, :, :, :, i] = arr
+        arr = torch.tensor((arr > 0).astype(np.uint8))
+        seg[:, :, :, i] = arr.unsqueeze(0)
 
-    seg = f.interpolate(seg, size = (h, w, d))
-    seg = seg.squeeze(0).to(torch.uint8)
     return seg
 
 def voxelization(folder_path):
-    """Create isometric cube
+    """Create non-uniform cube
 
     Returns:
-        cube: shape (D, H, W)
+        cube: torch tensor shape (1, H,W,D)
     """
     files = os.listdir(folder_path)
     files.sort(key = custom_sort)
@@ -39,7 +41,7 @@ def voxelization(folder_path):
     
     anisotropic_diffusion = apply_anisotropic_diffusion()
     
-    cube = torch.empty((1, 1, floor(row_space * 512), floor(col_space * 512), floor(thickness * len(files))))
+    cube = torch.empty((1, 512, 512, len(files)))
     for i, file in enumerate(files):
         path = os.path.join(folder_path, file)
         data = dcm.dcmread(path)
@@ -48,12 +50,18 @@ def voxelization(folder_path):
         
         arr = filter(anisotropic_diffusion, arr)
 
-        arr = arr.reshape(1, 1, 512, 512)
-        arr = f.interpolate(arr, scale_factor = (row_space, col_space))
-
-        cube[:, :, :, :, i] = arr
-
-    cube = f.interpolate(cube, scale_factor = (1, 1, thickness))
-    cube = cube.squeeze(0)
+        cube[:, :, :, i] = arr.unsqueeze(0)
         
-    return cube
+    return cube, row_space, col_space, thickness
+
+def run(cube_path, seg_path):
+    cube, scale_x, scale_y, scale_z = voxelization(cube_path)
+    seg = segmentation(seg_path)
+    
+    _, h, w, d = cube.shape
+    
+    transform = Resized(keys=["image", "label"], spatial_size=(floor(h * scale_x), floor(w * scale_y), floor(d * scale_z)))
+    transformed = transform({"image": cube, "label":seg})
+    return transformed["image"], transformed["label"]
+    
+    

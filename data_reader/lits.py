@@ -1,5 +1,6 @@
 from preprocessing.nii.augmentation import *
 from preprocessing.nii.voxelization import *
+import os
 
 def read_lits(folder_path):
     sample_dataset = 850
@@ -15,8 +16,7 @@ def read_lits(folder_path):
         data_path = os.path.join(folder_path, f"volume-{i}.nii")
         seg_path = os.path.join(folder_path, f"segmentation-{i}.nii")
         
-        cube = voxelization(data_path)
-        seg = segmentation(seg_path, cube)
+        cube, seg = run(data_path, seg_path)
         seg = torch.clamp(seg, min = 0, max = 1)
 
         if mode == "dataset.pth":
