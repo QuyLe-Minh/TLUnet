@@ -31,11 +31,15 @@ class DeconvBlock(nn.Module):
 class EncoderBlock(nn.Module):
     def __init__(self, skip_channels, in_channels, out_channels, is_last = False):
         super().__init__()
-        self.conv1 = ConvBlock(3, in_channels, out_channels//2)
-        self.pool = nn.MaxPool3d(2, stride = 2)
-        self.conv2 = ConvBlock(3, out_channels//2, out_channels)
-        self.skip_conv = ConvBlock(5, out_channels//2, skip_channels)
         self.is_last = is_last
+        if self.is_last:
+            self.conv1 = ConvBlock(3, in_channels, out_channels)
+            self.skip_conv = ConvBlock(5, out_channels, skip_channels)
+        else:
+            self.conv1 = ConvBlock(3, in_channels, out_channels//2)
+            self.skip_conv = ConvBlock(5, out_channels//2, skip_channels)
+            self.conv2 = ConvBlock(3, out_channels//2, out_channels)
+        self.pool = nn.MaxPool3d(2, stride = 2)
     
     def forward(self, x):
         x = self.conv1(x)

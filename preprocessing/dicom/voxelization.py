@@ -9,48 +9,23 @@ import os
 def custom_sort(item):
     return int(item.split('_')[1])
 
-def make_mask(folder_path, cube):
+def segmentation(folder_path, cube):
     files = os.listdir(folder_path)
     files.sort(key = custom_sort)
     _, h, w, d = cube.shape
-    seg = torch.empty((len(files), h, w))
+    seg = torch.empty((1, 1, h, w, len(files)))
     for i, file in enumerate(files):
         path = os.path.join(folder_path, file)
         arr = read_xray(path)
         arr = torch.tensor((arr > 0).astype(np.uint8)).reshape(1,1, 512, 512)
-        arr = f.interpolate(arr, scale_factor = (h/512, w/512))
-        seg[i] = arr.reshape(h, w)
+        arr = f.interpolate(arr, size = (h, w))
+        seg[:, :, :, :, i] = arr
 
+    seg = f.interpolate(seg, size = (h, w, d))
+    seg = seg.squeeze(0).to(torch.uint8)
     return seg
 
-def segmentation(folder_path, cube):
-    """Create 3D segmentation
-
-    Args:
-        folder_path;
-        cube (3D tensor): Volume
-
-    Returns:
-        3D segmentation
-    """
-    seg = make_mask(folder_path, cube)
-    _, h, w, d = cube.shape
-    seg = seg.unsqueeze(1)
-    seg = seg.permute(2, 3, 0, 1)
-
-    #make grid
-    x = torch.linspace(-1, 1, d)
-    y = torch.linspace(-1, 1, 1)
-    mx, my = torch.meshgrid((y, x))
-    grid = torch.stack((mx, my), 2).permute(1, 0, 2).unsqueeze(0)
-    grid =  grid.repeat(h, 1, 1, 1)
-
-    seg = f.grid_sample(seg, grid)
-    seg = seg.permute(3, 0, 1, 2)
-    seg = seg.to(torch.uint8)
-    return seg
-
-def make_cube(folder_path):
+def voxelization(folder_path):
     """Create isometric cube
 
     Returns:
@@ -64,7 +39,7 @@ def make_cube(folder_path):
     
     anisotropic_diffusion = apply_anisotropic_diffusion()
     
-    cube = torch.empty((len(files), floor(row_space * 512), floor(col_space * 512)))
+    cube = torch.empty((1, 1, floor(row_space * 512), floor(col_space * 512), floor(thickness * len(files))))
     for i, file in enumerate(files):
         path = os.path.join(folder_path, file)
         data = dcm.dcmread(path)
@@ -75,32 +50,10 @@ def make_cube(folder_path):
 
         arr = arr.reshape(1, 1, 512, 512)
         arr = f.interpolate(arr, scale_factor = (row_space, col_space))
-        arr = arr.reshape(arr.shape[-2:])
 
-        cube[i] = arr
+        cube[:, :, :, :, i] = arr
+
+    cube = f.interpolate(cube, scale_factor = (1, 1, thickness))
+    cube = cube.squeeze(0)
         
-    return cube, thickness
-
-def voxelization(folder_path):
-    """Voxelization
-
-    Returns:
-        cube: shape (1, H, W, D)
-    """
-    #make cube
-    cube, thickness = make_cube(folder_path)
-    d, h, w = cube.shape
-    cube = cube.unsqueeze(1)
-    cube = cube.permute(2, 3, 0, 1)
-
-    #make grid
-    x = torch.linspace(-1, 1, round(d*thickness))
-    y = torch.linspace(-1, 1, 1)
-    mx, my = torch.meshgrid((y, x))
-    grid = torch.stack((mx, my), 2).permute(1, 0, 2).unsqueeze(0)
-    grid =  grid.repeat(h, 1, 1, 1)
-
-    cube = f.grid_sample(cube, grid)
-    
-    cube = cube.permute(3, 0, 1, 2)    #1,h,w,d
     return cube
