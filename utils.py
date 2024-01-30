@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from math import *
+import os
 
 class Config:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -8,11 +9,11 @@ class Config:
     epochs = 2
     n_classes = 2
     patience = 5
-    train = torch.load("dataset/dataset.pth")
-    val = torch.load("dataset/val.pth")
+    train = [f"dataset/train/{file}" for file in os.listdir("dataset/train")]
+    val = [f"dataset/val/{file}" for file in os.listdir("dataset/val")]
     mode = "training"
 
-def one_hot_encoder(input, n_classes):
+def one_hot_encoder(input, n_classes=2):
     """One hot encode
 
     Args:
@@ -21,10 +22,11 @@ def one_hot_encoder(input, n_classes):
     Returns:
         one hot: cuda
     """
+    tmp = input.squeeze(1)
     b, c, h, w, d = input.shape
     one_hot = torch.zeros((b, n_classes, h, w, d))
-    one_hot[:, 0, :, :, :] = torch.where(input == 0, 1, 0)
-    one_hot[:, 1, :, :, :] = torch.where(input == 1, 1, 0)
+    one_hot[:, 0, :, :, :] = torch.where(tmp == 0, 1, 0)
+    one_hot[:, 1, :, :, :] = torch.where(tmp == 1, 1, 0)
     
     return one_hot.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
@@ -40,7 +42,7 @@ def manual_crop(X):
     _, _, h, w, d = X.shape
     for i in range(ceil(h/192)):
         if (i+1)*192 > h:
-            start_i = 512-192
+            start_i = h-192
         else:
             start_i = i*192
         for j in range(ceil(w/192)):
@@ -54,7 +56,7 @@ def manual_crop(X):
                 else:
                     start_k = k*64
                 X_cropped = X[:, :, start_i : start_i+192, start_j : start_j+192, start_k : start_k+64]
-                X_cropped_collection.append(X_cropped)
+                X_cropped_collection.append(X_cropped.to("cuda"))
                 
     return X_cropped_collection
 
@@ -66,11 +68,11 @@ def concat(y, y_cropped_collection):
         y_cropped_collection (pred): collection of cubes: n, b_, c_, 192, 192, 64
     """
     b, c, h, w, d = y.shape
-    pred = torch.empty(y.shape)
+    pred = torch.empty(y.shape).to("cuda")
     sample = 0
     for i in range(ceil(h/192)):
         if (i+1)*192 > h:
-            start_i = 512-192
+            start_i = h-192
         else:
             start_i = i*192
         for j in range(ceil(w/192)):
