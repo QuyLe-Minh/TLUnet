@@ -30,6 +30,7 @@ class DeconvBlock(nn.Module):
     
 class EncoderBlock(nn.Module):
     def __init__(self, skip_channels, in_channels, out_channels, is_last = False):
+        super().__init__()
         self.conv1 = ConvBlock(3, in_channels, out_channels//2)
         self.pool = nn.MaxPool3d(2, stride = 2)
         self.conv2 = ConvBlock(3, out_channels//2, out_channels)
