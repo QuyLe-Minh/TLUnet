@@ -1,11 +1,12 @@
 from torch.utils.data import Dataset
+import torch
 
 class CustomDataset(Dataset):
-    def __init__(self, dataset):
-        self.dataset = dataset
+    def __init__(self, folder):
+        self.dataset = folder
 
     def __len__(self):
-        return len(self.dataset)//2
+        return len(self.dataset)
 
     def __getitem__(self, index):
         """
@@ -13,7 +14,8 @@ class CustomDataset(Dataset):
             cube: B, 1, H, W, D
             segmentation: B, 1, H, W, D
         """
-        cube = self.dataset[f"data_{index}"]
-        segmentation = self.dataset[f"value_{index}"]
+        loaded = torch.load(self.dataset[index])
+        cube, seg = loaded["data"], loaded["value"]
+        cube = cube/255.0
     
-        return cube, segmentation
+        return cube, seg
