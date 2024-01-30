@@ -7,7 +7,6 @@ def read_lits(folder_path):
     sample_val = 3
     files = os.listdir(folder_path)
     num_samples = len(files)//2
-    transform = Rotate90d(keys=["image", "label"], k = 1)
     for i in range(num_samples):
         if i < 15:
             mode = "val.pth"
@@ -17,7 +16,6 @@ def read_lits(folder_path):
         seg_path = os.path.join(folder_path, f"segmentation-{i}.nii")
         
         cube, seg = run(data_path, seg_path)
-        seg = torch.clamp(seg, min = 0, max = 1)
 
         if mode == "dataset.pth":
             transformed = augmented(cube, seg)
@@ -25,14 +23,15 @@ def read_lits(folder_path):
                 dataset = {}
     
                 dataset["data"] = transformed[j]["image"]
-                dataset["value"] = transformed[j]["label"].to(torch.uint8)
+                dataset["value"] = torch.ceil(transformed[j]["label"]).to(torch.uint8)
+                dataset["value"] = torch.clamp(dataset["value"], min = 0, max = 1)
                 torch.save(dataset, f"dataset/train/train_{sample_dataset}.pth")
                 sample_dataset += 1
         else:
             val = {}
-            transformed = transform({"image":cube, "label":seg})
-            val["data"] = transformed["image"]
-            val["value"] = transformed["label"].to(torch.uint8)
+            val["data"] = cube
+            val["value"] = torch.ceil(seg).to(torch.uint8)
+            val["value"] = torch.clamp(val["value"], min = 0, max = 1)
             torch.save(val, f"dataset/val/val_{sample_val}.pth")
             sample_val +=1
             

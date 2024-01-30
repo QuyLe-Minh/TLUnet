@@ -68,13 +68,15 @@ def read_ircadb(folder_path):
                 dataset = {}
     
                 dataset["data"] = transformed[i]["image"]
-                dataset["value"] = transformed[i]["label"].to(torch.uint8)
+                dataset["value"] = torch.ceil(transformed[i]["label"]).to(torch.uint8)
+                dataset["value"] = torch.clamp(dataset["value"], min = 0, max = 1)
                 torch.save(dataset, f"dataset/train/train_{sample_dataset}.pth")
                 sample_dataset += 1 
         else:
             val = {}
             val["data"] = cube
-            val["value"] = seg.to(torch.uint8)
+            val["value"] = torch.ceil(seg).to(torch.uint8)
+            val["value"] = torch.clamp(val["value"], min = 0, max = 1)
             torch.save(val, f"dataset/val/val_{sample_val}.pth")
             sample_val += 1
 

@@ -52,7 +52,7 @@ def run(cube_path, seg_path):
     
     transform = Compose([
         Rotate90d(keys = ["image", "label"], k = 1),
-        Resized(["image", "label"], spatial_size=(floor(h * scale_x), floor(w * scale_y), floor(d * scale_z)))
+        Resized(["image", "label"], spatial_size=(floor(h * scale_x), floor(w * scale_y), floor(d * scale_z)), mode = "trilinear")
     ])
     transformed = transform({"image":cube, "label":seg})   
     return transformed["image"], transformed["label"] 

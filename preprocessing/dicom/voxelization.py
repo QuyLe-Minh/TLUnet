@@ -60,7 +60,7 @@ def run(cube_path, seg_path):
     
     _, h, w, d = cube.shape
     
-    transform = Resized(keys=["image", "label"], spatial_size=(floor(h * scale_x), floor(w * scale_y), floor(d * scale_z)))
+    transform = Resized(keys=["image", "label"], spatial_size=(floor(h * scale_x), floor(w * scale_y), floor(d * scale_z)), mode="trilinear")
     transformed = transform({"image": cube, "label":seg})
     return transformed["image"], transformed["label"]
     
