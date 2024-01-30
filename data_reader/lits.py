@@ -4,10 +4,9 @@ from preprocessing.nii.voxelization import *
 def read_lits(folder_path):
     sample_dataset = 850
     sample_val = 3
-    dataset = {}
-    val = {}
     files = os.listdir(folder_path)
     num_samples = len(files)//2
+    transform = Rotate90d(keys=["image", "label"], k = 1)
     for i in range(num_samples):
         if i < 15:
             mode = "val.pth"
@@ -23,19 +22,18 @@ def read_lits(folder_path):
         if mode == "dataset.pth":
             transformed = augmented(cube, seg)
             for j in range(len(transformed)):
-                key_data = f"data_{sample_dataset}"
-                key_value = f"value_{sample_dataset}"
+                dataset = {}
     
-                dataset[key_data] = transformed[j]["image"]
-                dataset[key_value] = transformed[j]["label"].to(torch.uint8)
+                dataset["data"] = transformed[j]["image"]
+                dataset["value"] = transformed[j]["label"].to(torch.uint8)
+                torch.save(dataset, f"dataset/train/train_{sample_dataset}.pth")
                 sample_dataset += 1
         else:
-            key_data = f"data_{sample_val}"
-            key_val = f"value_{sample_val}"
-            val[key_data] = cube
-            val[key_val] = seg.to(torch.uint8)
+            val = {}
+            transformed = transform({"image":cube, "label":seg})
+            val["data"] = transformed["image"]
+            val["value"] = transformed["label"].to(torch.uint8)
+            torch.save(val, f"dataset/val/val_{sample_val}.pth")
             sample_val +=1
             
         print(f"LITS: Successful saving patient: {i}. Current sample: {sample_dataset}. Current val: {sample_val}")
-    torch.save(dataset, "dataset/lits_dataset.pth")
-    torch.save(val, "dataset/lits_val.pth")

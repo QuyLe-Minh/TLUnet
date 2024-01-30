@@ -49,8 +49,6 @@ from preprocessing.dicom.voxelization import *
 def read_ircadb(folder_path):
     sample_dataset = 0
     sample_val = 0
-    dataset = {}
-    val = {}
     data_path = os.path.join(folder_path, "data")
     seg_path = os.path.join(folder_path, "seg")
     for patient in os.listdir(data_path):
@@ -58,6 +56,7 @@ def read_ircadb(folder_path):
             mode = "val.pth"
         else:
             mode = "dataset.pth"
+            
         data_patient = os.path.join(data_path, patient)
         seg_patient = os.path.join(seg_path, patient)
         
@@ -67,21 +66,19 @@ def read_ircadb(folder_path):
         if mode == "dataset.pth":
             transformed = augmented(cube, seg)
             for i in range(len(transformed)):
-                key_data = f"data_{sample_dataset}"
-                key_value = f"value_{sample_dataset}"
+                dataset = {}
     
-                dataset[key_data] = transformed[i]["image"]
-                dataset[key_value] = transformed[i]["label"].to(torch.uint8)
+                dataset["data"] = transformed[i]["image"]
+                dataset["value"] = transformed[i]["label"].to(torch.uint8)
+                torch.save(dataset, f"dataset/train/train_{sample_dataset}.pth")
                 sample_dataset += 1 
         else:
-            key_data = f"data_{sample_val}"
-            key_value = f"value_{sample_val}"
-            val[key_data] = cube
-            val[key_value] = seg.to(torch.uint8)
+            val = {}
+            val["data"] = cube
+            val["value"] = seg.to(torch.uint8)
+            torch.save(val, f"dataset/val/val_{sample_val}.pth")
             sample_val += 1
 
         print(f"Successful saving patient: {patient}. Current sample: {sample_dataset}. Current val: {sample_val}")
-    torch.save(dataset, "dataset/ircadb_dataset.pth")
-    torch.save(val, "dataset/ircadb_val.pth")
         
         
