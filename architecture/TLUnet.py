@@ -80,21 +80,20 @@ class TLUnet(nn.Module):
         self.ds2 = nn.Conv3d(n_deconv//4, n_classes, 1)
         self.ds3 = nn.Conv3d(n_deconv//8, n_classes, 1)  
     def forward(self, input):
-        x1, skip1 = self.eblock1(input)
-        x2, skip2 = self.eblock2(x1)
-        x3, skip3 = self.eblock3(x2)
-        x4, skip4 = self.eblock4(x3)
+        x1, skip1 = self.eblock1(input) #96
+        x2, skip2 = self.eblock2(x1) #48
+        x3, skip3 = self.eblock3(x2) #24
+        x4, skip4 = self.eblock4(x3) #12
         
-        x4 = self.bottle_neck(x4)
+        x4 = self.bottle_neck(x4) #24 
         
-        d1 = self.deconv1(x4, skip4)
+        d1 = self.deconv1(x4, skip4) #48
         ds1 = self.ds1(d1)
-        d2 = self.deconv2(d1, skip3)
+        d2 = self.deconv2(d1, skip3) #96
         ds2 = self.ds2(d2)
-        d3 = self.deconv3(d2, skip2)
-        ds3 = self.ds3(d3)
+        d3 = self.deconv3(d2, skip2) #192
         
         d4 = torch.cat((d3, skip1), dim = 1)
         res = self.head(d4)
         
-        return res, ds1, ds2, ds3
+        return res, ds1, ds2
