@@ -3,11 +3,11 @@ from preprocessing.mhd.voxelization import *
 import os
 
 def read_sliver(folder_path, sample_dataset, sample_val):
-    for i in range(1, 21):
-        if i in [1, 2]:
-            mode = "val.pth"
+    for i in range(1,21):
+        if i in [9, 16]:
+            mode = "val"
         else:
-            mode = "dataset.pth"
+            mode = "dataset"
         
         code = str(i)
         if i < 10:
@@ -17,7 +17,7 @@ def read_sliver(folder_path, sample_dataset, sample_val):
         
         cube, seg = run(data_path, seg_path)
 
-        if mode == "dataset.pth":
+        if mode == "dataset":
             transformed = augmented(cube, seg)
             for j in range(len(transformed)):
                 dataset = {}
@@ -25,15 +25,15 @@ def read_sliver(folder_path, sample_dataset, sample_val):
                 dataset["data"] = transformed[j]["image"]
                 dataset["value"] = torch.ceil(transformed[j]["label"]).to(torch.uint8)
                 dataset["value"] = torch.clamp(dataset["value"], min = 0, max = 1)
-                torch.save(dataset, f"dataset/train/train_{sample_dataset}.pth")
+                torch.save(dataset, f"dataset/train_cnn3d/train_{sample_dataset}.pth")
                 sample_dataset += 1
         else:
             val = {}
             val["data"] = cube
             val["value"] = torch.ceil(seg).to(torch.uint8)
             val["value"] = torch.clamp(val["value"], min = 0, max = 1)
-            torch.save(val, f"dataset/val/val_{sample_val}.pth")
+            torch.save(val, f"dataset/val_cnn3d/val_{sample_val}.pth")
             sample_val +=1
             
-        print(f"LITS: Successful saving patient: {i}. Current sample: {sample_dataset}. Current val: {sample_val}")
+        print(f"SLIVER07: Successful saving patient: {i}. Current sample: {sample_dataset}. Current val: {sample_val}")
     return sample_dataset, sample_val
