@@ -56,7 +56,7 @@ def manual_crop(X):
                 else:
                     start_k = k*64
                 X_cropped = X[:, :, start_i : start_i+192, start_j : start_j+192, start_k : start_k+64]
-                X_cropped_collection.append(X_cropped.to("cuda"))
+                X_cropped_collection.append(X_cropped.to(torch.device("cuda" if torch.cuda.is_available() else "cpu")))
                 
     return X_cropped_collection
 
@@ -64,11 +64,11 @@ def concat(y, y_cropped_collection):
     """Concat pieces of cube
 
     Args:
-        y (ground truth): b, c, 512, 512, d
+        y (ground truth): b=1, c, 512, 512, d
         y_cropped_collection (pred): collection of cubes: n, b_, c_, 192, 192, 64
     """
     b, c, h, w, d = y.shape
-    pred = torch.empty(y.shape).to("cuda")
+    pred = torch.empty(y.shape)
     sample = 0
     for i in range(ceil(h/192)):
         if (i+1)*192 > h:
@@ -88,4 +88,4 @@ def concat(y, y_cropped_collection):
                 pred[:, :, start_i:start_i+192, start_j:start_j+192, start_k:start_k+64] = y_cropped_collection[sample]
                 sample += 1
                 
-    return pred
+    return pred.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))

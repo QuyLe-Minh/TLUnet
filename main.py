@@ -13,8 +13,8 @@ if __name__ == "__main__":
     config = Config()
     train_dataset = CustomDataset(config.train)
     train_loader = DataLoader(train_dataset, config.batch_size, shuffle = True, num_workers=2)
-    
+
     val_dataset = CustomDataset(config.val)    
-    val_loader = DataLoader(val_dataset, config.batch_size, shuffle=False, num_workers=2)
-    
+    val_loader = DataLoader(val_dataset, 1, shuffle=False, num_workers=2)
+
     training(config, train_loader, val_loader, config.mode)
