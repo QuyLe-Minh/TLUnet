@@ -7,7 +7,6 @@ def window_image(img, window_center = -300, window_width = 1400, intercept = 0, 
     img_max = window_center + window_width//2
     img[img<img_min] = img_min 
     img[img>img_max] = img_max 
-    img = img - img_min
     if rescale: 
         img = (img - img_min) / (img_max - img_min)*255.0 
     return img

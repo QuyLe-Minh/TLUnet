@@ -3,7 +3,7 @@ from preprocessing.mhd.voxelization import *
 import os
 
 def read_sliver(folder_path, sample_dataset, sample_val):
-    for i in range(20):
+    for i in range(1, 21):
         if i in [1, 2]:
             mode = "val.pth"
         else:

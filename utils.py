@@ -37,6 +37,11 @@ def init_weights(m):
     if m.bias is not None:
       torch.nn.init.zeros_(m.bias)
       
+  if isinstance(m, nn.ConvTranspose3d):
+    torch.nn.init.kaiming_normal(m.weight)
+    if m.bias is not None:
+      torch.nn.init.zeros_(m.bias)
+      
       
 def manual_crop(X):
     X_cropped_collection = []
