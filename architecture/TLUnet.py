@@ -1,4 +1,4 @@
-from components import *
+from architecture.components import *
 
 class DeconvBlock(nn.Module):
     def __init__(self, in_channels, out_channels):

@@ -1,7 +1,8 @@
-from components import *
+from architecture.components import *
 
 class CNN3D(nn.Module):
-    def __init__(self, n_classes):
+    def __init__(self, n_classes = 2):
+        super().__init__()
         filters = 32
         deconv = 16
         

@@ -9,6 +9,7 @@ class Config:
     epochs = 2
     n_classes = 2
     patience = 5
+    n_freeze = 36
     train = [f"dataset/train/{file}" for file in os.listdir("dataset/train")]
     val = [f"dataset/val/{file}" for file in os.listdir("dataset/val")]
     mode = "training"
