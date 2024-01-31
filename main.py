@@ -4,6 +4,7 @@ from data_loader import *
 from torch.utils.data import DataLoader
 from train import training
 from utils import Config
+from eval import eval
     
 
 if __name__ == "__main__":
@@ -18,3 +19,4 @@ if __name__ == "__main__":
     val_loader = DataLoader(val_dataset, 1, shuffle=False, num_workers=2)
 
     training(config, train_loader, val_loader, config.mode)
+    eval(config, val_loader, "model.pt")

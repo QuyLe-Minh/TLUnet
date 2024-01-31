@@ -8,7 +8,7 @@ def read_lits(folder_path):
     files = os.listdir(folder_path)
     num_samples = len(files)//2
     for i in range(num_samples):
-        if i < 15:
+        if i in [23, 26, 53, 56, 62, 64, 100, 108, 120, 121, 126, 127, 128]:
             mode = "val.pth"
         else:
             mode = "dataset.pth"

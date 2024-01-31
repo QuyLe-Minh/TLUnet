@@ -6,7 +6,7 @@ import os
 class Config:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     batch_size = 5
-    epochs = 2
+    epochs = 1000
     n_classes = 2
     patience = 5
     n_freeze = 36

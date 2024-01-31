@@ -5,12 +5,11 @@ def iou(pred, gt):
     """Calculate iou score
 
     Args:
-        pred (_Tensor_): cuda:0
-        gt (_Tensor_): cuda:0
+        pred (_Tensor_): unormalized B, C, H, W, D
+        gt (_Tensor_): one hot vector B, C, H, W, D
     """
-    mask = one_hot_encoder(pred)
     eps = 1e-5
-    intersect = torch.sum(mask * gt)
+    intersect = torch.sum(pred * gt)
     union = torch.sum(pred + gt)
     iou = (intersect + eps)/(union - intersect + eps)
     return iou
@@ -22,9 +21,8 @@ def dice(pred, gt):
         pred (_Tensor_): cuda:0
         gt (_Tensor_): cuda:0
     """
-    mask = one_hot_encoder(pred)
     eps = 1e-5
-    intersect = torch.sum(mask * gt)
+    intersect = torch.sum(pred * gt)
     union = torch.sum(pred + gt)
     dice = 2 * (intersect + eps)/(union + eps)
     return dice
