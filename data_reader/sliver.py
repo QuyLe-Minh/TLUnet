@@ -12,8 +12,8 @@ def read_sliver(folder_path, sample_dataset, sample_val):
         code = str(i)
         if i < 10:
             code = "0" + code
-        data_path = os.path.join(folder_path, "scan", f"liver-orig0{code}.nii")
-        seg_path = os.path.join(folder_path, "label", f"liver-seg0{code}.nii")
+        data_path = os.path.join(folder_path, "scan", f"liver-orig0{code}.mhd")
+        seg_path = os.path.join(folder_path, "label", f"liver-seg0{code}.mhd")
         
         cube, seg = run(data_path, seg_path)
 
