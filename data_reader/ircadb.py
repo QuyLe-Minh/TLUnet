@@ -46,13 +46,12 @@ from preprocessing.dicom.voxelization import *
 # make_dataset()
 # print("-----------------------------SUCCESS----------------------")
 
-def read_ircadb(folder_path):
-    sample_dataset = 0
-    sample_val = 0
+def read_ircadb(folder_path, sample_dataset, sample_val):
+
     data_path = os.path.join(folder_path, "data")
     seg_path = os.path.join(folder_path, "seg")
     for patient in os.listdir(data_path):
-        if patient in ["3Dircadb1.1", "3Dircadb1.13", "3Dircadb1.8"]:
+        if patient in ["3Dircadb1.1", "3Dircadb1.8"]:
             mode = "val.pth"
         else:
             mode = "dataset.pth"
@@ -81,5 +80,6 @@ def read_ircadb(folder_path):
             sample_val += 1
 
         print(f"Successful saving patient: {patient}. Current sample: {sample_dataset}. Current val: {sample_val}")
+    return sample_dataset, sample_val
         
         

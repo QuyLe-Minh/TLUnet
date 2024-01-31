@@ -1,17 +1,19 @@
-from preprocessing.nii.augmentation import *
-from preprocessing.nii.voxelization import *
+from preprocessing.mhd.augmentation import *
+from preprocessing.mhd.voxelization import *
 import os
 
-def read_lits(folder_path, sample_dataset, sample_val):
-    files = os.listdir(folder_path)
-    num_samples = len(files)//2
-    for i in range(num_samples):
-        if i in [23, 26, 53, 56, 62, 64, 100, 108, 120, 121, 126, 127, 128]:
+def read_sliver(folder_path, sample_dataset, sample_val):
+    for i in range(20):
+        if i in [1, 2]:
             mode = "val.pth"
         else:
             mode = "dataset.pth"
-        data_path = os.path.join(folder_path, f"volume-{i}.nii")
-        seg_path = os.path.join(folder_path, f"segmentation-{i}.nii")
+        
+        code = str(i)
+        if i < 10:
+            code = "0" + code
+        data_path = os.path.join(folder_path, "scan", f"liver-orig0{code}.nii")
+        seg_path = os.path.join(folder_path, "label", f"liver-seg0{code}.nii")
         
         cube, seg = run(data_path, seg_path)
 
