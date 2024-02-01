@@ -17,12 +17,12 @@ def train(config, dataloader, model, entropy_loss, dice_loss, optimizer):
         optimizer.zero_grad()
 
         # forward + backward + optimize
-        pred = model(X) #output, ds1 (min), ds2
-        loss = entropy_loss(pred[0], y_one_hot) + dice_loss(pred[0], y_one_hot)
+        pred = model(X) #output
+        loss = entropy_loss(pred, y_one_hot) + dice_loss(pred, y_one_hot)
         loss.backward()
         optimizer.step()
 
-        correct += (pred[0].argmax(1) == y).type(torch.float).mean().item()
+        correct += (pred.argmax(1) == y).type(torch.float).mean().item()
 
         if batch % 100 == 0:
             loss, current = loss.item(), batch * len(X)
@@ -41,7 +41,7 @@ def training(config, train_loader, val_loader, mode):
         print("Load model...")
     model.train()
     
-    entropy_loss = nn.CrossEntropyLoss(weight=torch.tensor([1.0, 2.0]).to(config.device))
+    entropy_loss = nn.CrossEntropyLoss()
     dice_loss = Dice_loss()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=1e-4)
     scheduler = ReduceLROnPlateau(optimizer, 'min')
