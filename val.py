@@ -19,7 +19,7 @@ def val(config, dataloader, model, entropy_loss, dice_loss):
             
             pred = concat(y_one_hot, y_cropped_collection)
             
-            test_loss += entropy_loss(pred, y_one_hot).item() + dice_loss(pred, y_one_hot)
+            test_loss += 0.4 * entropy_loss(pred, y_one_hot).item() + 0.6 * dice_loss(pred, y_one_hot)
             correct += (pred.argmax(1) == y.to(config.device)).type(torch.float).mean().item()
 
     test_loss /= num_batches
