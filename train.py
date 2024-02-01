@@ -1,8 +1,7 @@
-import torch.nn.functional as F
 from loss.dice_loss import *
 from utils import one_hot_encoder, init_weights
 from val import *
-from architecture.TLUnet import TLUnet
+from architecture.CNN3D import CNN3D
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 def train(config, dataloader, model, entropy_loss, dice_loss, optimizer):
@@ -33,12 +32,10 @@ def train(config, dataloader, model, entropy_loss, dice_loss, optimizer):
     
     
 def training(config, train_loader, val_loader, mode):
-    model = TLUnet(config.n_classes).to(config.device)
-    if mode == "training":
-        model.apply(init_weights)
-    else:
+    model = CNN3D().to(config.device)
+    if mode != "training":
         model.load_state_dict(torch.load("cnn3d.pt"))
-        print("Load model...")
+        print("Load model cnn3d...")
     model.train()
     
     entropy_loss = nn.CrossEntropyLoss()

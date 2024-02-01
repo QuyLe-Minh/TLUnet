@@ -1,9 +1,9 @@
 from metrics.metrics import *
 from utils import one_hot_encoder, manual_crop, concat
-from architecture.TLUnet import TLUnet
+from architecture.CNN3D import CNN3D
 
 def eval(config, dataloader, model_state_dict):
-    model = TLUnet().to(config.device)
+    model = CNN3D.to(config.device)
     model.load_state_dict(model_state_dict)
     model.eval()
     print("Successful loading model!!!")   
