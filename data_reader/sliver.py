@@ -4,7 +4,7 @@ import os
 
 def read_sliver(folder_path, sample_dataset, sample_val):
     for i in range(1,21):
-        if i in [9, 16]:
+        if i in [2, 20]:
             mode = "val"
         else:
             mode = "dataset"

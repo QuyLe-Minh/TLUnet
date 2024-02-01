@@ -51,7 +51,7 @@ def read_ircadb(folder_path, sample_dataset, sample_val):
     data_path = os.path.join(folder_path, "data")
     seg_path = os.path.join(folder_path, "seg")
     for patient in os.listdir(data_path):
-        if patient in ["3Dircadb1.1", "3Dircadb1.8"]:
+        if patient in ["3Dircadb1.2", "3Dircadb1.6"]:
             mode = "val"
         else:
             mode = "dataset"

@@ -6,7 +6,7 @@ def read_lits(folder_path, sample_dataset, sample_val):
     files = os.listdir(folder_path)
     num_samples = len(files)//2
     for i in range(num_samples):
-        if i in [1, 14, 15, 18, 20, 31, 41, 49, 54, 61, 68, 72, 77, 81, 88, 93, 95, 96, 101, 105, 112, 113, 116, 117, 118, 119, 130]:
+        if i in [11, 23, 26, 53, 56, 62, 64, 100, 108, 120, 121, 126, 127]:
             mode = "val"
         else:
             mode = "dataset"
