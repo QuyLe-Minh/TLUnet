@@ -69,14 +69,14 @@ def read_ircadb(folder_path, sample_dataset, sample_val):
                 dataset["data"] = transformed[i]["image"]
                 dataset["value"] = torch.ceil(transformed[i]["label"]).to(torch.uint8)
                 dataset["value"] = torch.clamp(dataset["value"], min = 0, max = 1)
-                torch.save(dataset, f"dataset/train_cnn3d/train_{sample_dataset}.pth")
+                torch.save(dataset, f"dataset/train_tlu/train_{sample_dataset}.pth")
                 sample_dataset += 1 
         else:
             val = {}
             val["data"] = cube
             val["value"] = torch.ceil(seg).to(torch.uint8)
             val["value"] = torch.clamp(val["value"], min = 0, max = 1)
-            torch.save(val, f"dataset/val_cnn3d/val_{sample_val}.pth")
+            torch.save(val, f"dataset/val_tlu/val_{sample_val}.pth")
             sample_val += 1
 
         print(f"IRCADB: Successful saving patient: {patient}. Current sample: {sample_dataset}. Current val: {sample_val}")
