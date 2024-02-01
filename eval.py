@@ -4,7 +4,7 @@ from architecture.TLUnet import TLUnet
 
 def eval(config, dataloader, model_state_dict):
     model = TLUnet().to(config.device)
-    model.load_state_dict(model_state_dict)
+    model.load_state_dict(torch.load(model_state_dict))
     model.eval()
     print("Successful loading model!!!")   
     
