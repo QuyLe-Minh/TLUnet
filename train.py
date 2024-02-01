@@ -15,25 +15,21 @@ def train(config, dataloader, model, entropy_loss, dice_loss, optimizer):
         y_one_hot = one_hot_encoder(y)
         # zero the parameter gradients
         optimizer.zero_grad()
-        
-        b, c, h, w, d = X.shape
-        down2 = F.interpolate(y_one_hot, (h//2, w//2, d//2))
-        down1 = F.interpolate(y_one_hot, (h//4, w//4, d//4))
 
         # forward + backward + optimize
-        pred = model(X) #output, ds1 (min), ds2
-        loss = entropy_loss(pred[0], y_one_hot) * 0.57 + entropy_loss(pred[1], down1) * 0.14 + entropy_loss(pred[2], down2) * 0.29 + dice_loss(pred[0], y_one_hot)
+        pred = model(X) #output
+        loss = entropy_loss(pred, y_one_hot) + dice_loss(pred, y_one_hot)
         loss.backward()
         optimizer.step()
 
-        correct += (pred[0].argmax(1) == y).float().sum()
+        correct += (pred.argmax(1) == y).type(torch.float).mean().item()
 
         if batch % 100 == 0:
             loss, current = loss.item(), batch * len(X)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
-    correct = correct / (size * 192 * 192 * 64)
-    print(f"Accuracy: {correct:>7f}")
+    correct = correct / len(dataloader)
+    print(f"Accuracy: {100 * correct:>7f}%")
     
     
 def training(config, train_loader, val_loader, mode):
@@ -42,15 +38,16 @@ def training(config, train_loader, val_loader, mode):
         model.apply(init_weights)
     else:
         model.load_state_dict(torch.load("model.pt"))
+        print("Load model...")
     model.train()
     
-    entropy_loss = nn.CrossEntropyLoss(weight=torch.tensor([1.0, 2.0]).to(config.device))
+    entropy_loss = nn.CrossEntropyLoss()
     dice_loss = Dice_loss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-5)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=1e-4)
     scheduler = ReduceLROnPlateau(optimizer, 'min')
     
     torch.cuda.empty_cache()
-    best_one = 10
+    best_one = 0.051066
     count = 0
     
     for t in range(config.epochs):
@@ -69,4 +66,5 @@ def training(config, train_loader, val_loader, mode):
                 break
 
         scheduler.step(val_loss)
+        torch.cuda.empty_cache()
     

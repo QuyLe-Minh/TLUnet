@@ -1,17 +1,19 @@
-from preprocessing.nii.augmentation import *
-from preprocessing.nii.voxelization import *
+from preprocessing.mhd.augmentation import *
+from preprocessing.mhd.voxelization import *
 import os
 
-def read_lits(folder_path, sample_dataset, sample_val):
-    files = os.listdir(folder_path)
-    num_samples = len(files)//2
-    for i in range(num_samples):
-        if i in [1, 14, 15, 18, 20, 31, 41, 49, 54, 61, 68, 72, 77, 81, 88, 93, 95, 96, 101, 105, 112, 113, 116, 117, 118, 119, 130]:
+def read_sliver(folder_path, sample_dataset, sample_val):
+    for i in range(1,21):
+        if i in [9, 16]:
             mode = "val"
         else:
             mode = "dataset"
-        data_path = os.path.join(folder_path, f"volume-{i}.nii")
-        seg_path = os.path.join(folder_path, f"segmentation-{i}.nii")
+        
+        code = str(i)
+        if i < 10:
+            code = "0" + code
+        data_path = os.path.join(folder_path, "scan", f"liver-orig0{code}.mhd")
+        seg_path = os.path.join(folder_path, "label", f"liver-seg0{code}.mhd")
         
         cube, seg = run(data_path, seg_path)
 
@@ -33,5 +35,5 @@ def read_lits(folder_path, sample_dataset, sample_val):
             torch.save(val, f"dataset/val_cnn3d/val_{sample_val}.pth")
             sample_val +=1
             
-        print(f"LITS: Successful saving patient: {i}. Current sample: {sample_dataset}. Current val: {sample_val}")
+        print(f"SLIVER07: Successful saving patient: {i}. Current sample: {sample_dataset}. Current val: {sample_val}")
     return sample_dataset, sample_val
