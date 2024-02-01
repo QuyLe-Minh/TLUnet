@@ -3,8 +3,8 @@ from utils import one_hot_encoder, manual_crop, concat
 from architecture.CNN3D import CNN3D
 
 def eval(config, dataloader, model_state_dict):
-    model = CNN3D.to(config.device)
-    model.load_state_dict(model_state_dict)
+    model = CNN3D().to(config.device)
+    model.load_state_dict(torch.load(model_state_dict))
     model.eval()
     print("Successful loading model!!!")   
     
