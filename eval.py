@@ -30,5 +30,4 @@ def eval(config, dataloader, model_state_dict):
     dice_score_liver /= size
     iou_score_liver /= size
     print(f"Evaluation: \n Dice score liver: {(100 * dice_score_liver):>0.3f}%, IoU score liver: {(iou_score_liver * 100):>0.3f}% \n")
-    return
 
