@@ -7,7 +7,7 @@ class ConvBlock(nn.Module):
         self.conv = nn.Sequential(
             nn.Conv3d(in_channels, out_channels, kernel, 1, padding="same"),
             nn.BatchNorm3d(out_channels),
-            nn.GELU()
+            nn.ELU()
         )
     
     def forward(self, x):
