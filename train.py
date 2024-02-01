@@ -17,12 +17,12 @@ def train(config, dataloader, model, entropy_loss, dice_loss, optimizer):
         optimizer.zero_grad()
 
         # forward + backward + optimize
-        pred = model(X) #output
-        loss = entropy_loss(pred, y_one_hot) + dice_loss(pred, y_one_hot)
+        pred = model(X) #output, ds1, ds2, ds3 (least to most)
+        loss = entropy_loss(pred[0], y_one_hot) * 0.53 + entropy_loss(pred[1], y_one_hot) * 0.07 + entropy_loss(pred[2], y_one_hot) * 0.13 + entropy_loss(pred[3], y_one_hot) * 0.27 + dice_loss(pred[0], y_one_hot)
         loss.backward()
         optimizer.step()
 
-        correct += (pred.argmax(1) == y).type(torch.float).mean().item()
+        correct += (pred[0].argmax(1) == y).type(torch.float).mean().item()
 
         if batch % 100 == 0:
             loss, current = loss.item(), batch * len(X)
@@ -37,7 +37,7 @@ def training(config, train_loader, val_loader, mode):
     if mode == "training":
         model.apply(init_weights)
     else:
-        model.load_state_dict(torch.load("model.pt"))
+        model.load_state_dict(torch.load("cnn3d.pt"))
         print("Load model...")
     model.train()
     
@@ -47,7 +47,7 @@ def training(config, train_loader, val_loader, mode):
     scheduler = ReduceLROnPlateau(optimizer, 'min')
     
     torch.cuda.empty_cache()
-    best_one = 0.051066
+    best_one = 10
     count = 0
     
     for t in range(config.epochs):
@@ -58,9 +58,9 @@ def training(config, train_loader, val_loader, mode):
         if val_loss < best_one:
             count = 0
             best_one = val_loss
-            torch.save(model.state_dict(), "model.pt")
+            torch.save(model.state_dict(), "cnn3d.pt")
         else:
-            model.load_state_dict(torch.load("model.pt"))
+            model.load_state_dict(torch.load("cnn3d.pt"))
             count+=1
             if count == config.patience:
                 break

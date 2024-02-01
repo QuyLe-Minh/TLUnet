@@ -10,8 +10,8 @@ class Config:
     n_classes = 2
     patience = 3
     n_freeze = 36
-    train = [f"dataset/train/{file}" for file in os.listdir("dataset/train")]
-    val = [f"dataset/val/{file}" for file in os.listdir("dataset/val")]
+    train = [f"dataset/train_cnn3d/{file}" for file in os.listdir("dataset/train_cnn3d")]
+    val = [f"dataset/val_cnn3d/{file}" for file in os.listdir("dataset/val_cnn3d")]
     mode = "training"
 
 def one_hot_encoder(input, n_classes=2):

@@ -18,7 +18,7 @@ def eval(config, dataloader, model_state_dict):
             X_cropped_collection = manual_crop(X)
             y_cropped_collection = []
             for i in range(len(X_cropped_collection)):
-                y_cropped = model(X_cropped_collection[i])
+                y_cropped = model(X_cropped_collection[i])[0]
                 y_cropped_collection.append(y_cropped.detach().cpu())
             
             pred = concat(y_one_hot, y_cropped_collection)
