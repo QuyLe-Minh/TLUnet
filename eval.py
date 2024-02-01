@@ -22,7 +22,7 @@ def eval(config, dataloader, model_state_dict):
                 y_cropped_collection.append(y_cropped.detach().cpu())
             
             pred = concat(y_one_hot, y_cropped_collection)
-            pred = one_hot_encoder(torch.argmax(pred, dim = 1))
+            pred = one_hot_encoder(torch.argmax(pred, dim = 1).unsqueeze(1))
             
             dice_score_liver += dice(pred[:, 1], y_one_hot[:, 1])
             iou_score_liver += iou(pred[:, 1], y_one_hot[:, 1])
