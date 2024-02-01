@@ -6,9 +6,10 @@ import os
 class Config:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     batch_size = 5
-    epochs = 2
+    epochs = 1000
     n_classes = 2
     patience = 5
+    n_freeze = 36
     train = [f"dataset/train/{file}" for file in os.listdir("dataset/train")]
     val = [f"dataset/val/{file}" for file in os.listdir("dataset/val")]
     mode = "training"
@@ -32,6 +33,11 @@ def one_hot_encoder(input, n_classes=2):
 
 def init_weights(m):
   if isinstance(m, nn.Conv3d):
+    torch.nn.init.kaiming_normal(m.weight)
+    if m.bias is not None:
+      torch.nn.init.zeros_(m.bias)
+      
+  if isinstance(m, nn.ConvTranspose3d):
     torch.nn.init.kaiming_normal(m.weight)
     if m.bias is not None:
       torch.nn.init.zeros_(m.bias)
