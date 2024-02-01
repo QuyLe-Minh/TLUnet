@@ -8,7 +8,7 @@ class Config:
     batch_size = 5
     epochs = 1000
     n_classes = 2
-    patience = 5
+    patience = 3
     n_freeze = 36
     train = [f"dataset/train/{file}" for file in os.listdir("dataset/train")]
     val = [f"dataset/val/{file}" for file in os.listdir("dataset/val")]

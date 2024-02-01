@@ -11,11 +11,10 @@ class DeconvBlock(nn.Module):
     def forward(self, x, skip):
         x = self.conv1(x)
         x = self.conv2(x)
-        ds = x
         x = self.deconv(x)
         skip = self.skip_conv(skip)
         up = torch.cat([x, skip], dim = 1)
-        return up, ds
+        return up
 
         
 class TLUnet(nn.Module):
@@ -39,9 +38,7 @@ class TLUnet(nn.Module):
             ConvBlock(3, filters//2, filters//2),
             nn.Conv3d(filters//2, n_classes, 1)
         )
-        
-        self.ds2 = nn.Conv3d(filters*2, n_classes, 1)
-        self.ds3 = nn.Conv3d(filters, n_classes, 1)  
+    
     def forward(self, input):
         x1, skip1 = self.eblock1(input) #96
         x2, skip2 = self.eblock2(x1) #48
@@ -52,12 +49,10 @@ class TLUnet(nn.Module):
         
         concat = torch.cat([x4, skip4], dim = 1) 
         
-        d1, _ = self.deconv1(concat, skip3) 
-        d2, ds2 = self.deconv2(d1, skip2) 
-        d3, ds3 = self.deconv3(d2, skip1)
+        d1 = self.deconv1(concat, skip3) 
+        d2 = self.deconv2(d1, skip2) 
+        d3 = self.deconv3(d2, skip1)
         
-        ds2 = self.ds2(ds2)
-        ds3 = self.ds3(ds3) 
         pred = self.head(d3)
         
-        return pred, ds2, ds3
+        return pred

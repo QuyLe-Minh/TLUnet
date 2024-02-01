@@ -15,14 +15,10 @@ def train(config, dataloader, model, entropy_loss, dice_loss, optimizer):
         y_one_hot = one_hot_encoder(y)
         # zero the parameter gradients
         optimizer.zero_grad()
-        
-        b, c, h, w, d = X.shape
-        down2 = F.interpolate(y_one_hot, (h//2, w//2, d//2))
-        down1 = F.interpolate(y_one_hot, (h//4, w//4, d//4))
 
         # forward + backward + optimize
         pred = model(X) #output, ds1 (min), ds2
-        loss = entropy_loss(pred[0], y_one_hot) * 0.57 + entropy_loss(pred[1], down1) * 0.14 + entropy_loss(pred[2], down2) * 0.29 + dice_loss(pred[0], y_one_hot)
+        loss = entropy_loss(pred[0], y_one_hot) + dice_loss(pred[0], y_one_hot)
         loss.backward()
         optimizer.step()
 
