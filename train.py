@@ -1,8 +1,9 @@
-from loss.dice_loss import *
-from utils import one_hot_encoder, init_weights
+from monai.losses import DiceLoss
+from utils import one_hot_encoder
 from val import *
 from architecture.CNN3D import CNN3D
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch import nn
 
 def train(config, dataloader, model, entropy_loss, dice_loss, optimizer):
     size = len(dataloader.dataset)
@@ -17,7 +18,7 @@ def train(config, dataloader, model, entropy_loss, dice_loss, optimizer):
 
         # forward + backward + optimize
         pred = model(X) #output, ds1, ds2, ds3 (least to most)
-        loss = entropy_loss(pred[0], y_one_hot) * 0.53 + entropy_loss(pred[1], y_one_hot) * 0.07 + entropy_loss(pred[2], y_one_hot) * 0.13 + entropy_loss(pred[3], y_one_hot) * 0.27 + dice_loss(pred[0], y_one_hot)
+        loss = 0.4 * (entropy_loss(pred[0], y_one_hot) * 0.53 + entropy_loss(pred[1], y_one_hot) * 0.07 + entropy_loss(pred[2], y_one_hot) * 0.13 + entropy_loss(pred[3], y_one_hot) * 0.27) + 0.6 * dice_loss(pred[0], y)
         loss.backward()
         optimizer.step()
 
@@ -38,13 +39,13 @@ def training(config, train_loader, val_loader, mode):
         print("Load model cnn3d...")
     model.train()
     
-    entropy_loss = nn.CrossEntropyLoss()
-    dice_loss = Dice_loss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=1e-4)
+    entropy_loss = nn.CrossEntropyLoss(torch.tensor([1.0, 5.0]).to(config.device))
+    dice_loss = DiceLoss(to_onehot_y = True, softmax = True, weight = torch.tensor([1.0, 5.0]).to(config.device))
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-5)
     scheduler = ReduceLROnPlateau(optimizer, 'min')
     
     torch.cuda.empty_cache()
-    best_one = 10
+    best_one = 0.982636
     count = 0
     
     for t in range(config.epochs):
@@ -63,5 +64,3 @@ def training(config, train_loader, val_loader, mode):
                 break
 
         scheduler.step(val_loss)
-        torch.cuda.empty_cache()
-    

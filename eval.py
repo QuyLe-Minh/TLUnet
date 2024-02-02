@@ -1,6 +1,7 @@
-from metrics.metrics import *
+from monai.metrics import DiceMetric, compute_iou
 from utils import one_hot_encoder, manual_crop, concat
 from architecture.CNN3D import CNN3D
+import torch
 
 def eval(config, dataloader, model_state_dict):
     model = CNN3D().to(config.device)
@@ -24,8 +25,8 @@ def eval(config, dataloader, model_state_dict):
             pred = concat(y_one_hot, y_cropped_collection)
             pred = one_hot_encoder(torch.argmax(pred, dim = 1).unsqueeze(1))
             
-            dice_score_liver += dice(pred[:, 1], y_one_hot[:, 1])
-            iou_score_liver += iou(pred[:, 1], y_one_hot[:, 1])
+            dice_score_liver += DiceMetric()(pred, y.to(config.device))
+            iou_score_liver += compute_iou(pred, y)
 
     dice_score_liver /= size
     iou_score_liver /= size
