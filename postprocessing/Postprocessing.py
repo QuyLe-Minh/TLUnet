@@ -1,13 +1,28 @@
-import numpy as np
+import torch
 from scipy import ndimage
 
 class Postprocessing:
     def __init__(self):
         pass
         
-    def __call__(self, mask):
-        mask = self.denoising(mask)
-        mask = self.fill_hole(mask)
+    def __call__(self, pred):
+        """Postprocessing prediction
+
+        Args:
+            pred (torch tensor cuda): B = 1, C = 1, H, W, D
+
+        Returns:
+            torch tensor cuda 1, 1, H, W, D
+        """
+        mask = pred.reshape(pred.shape[-3:]) #H, W, D
+        h, w, d = mask.shape
+        for i in range(mask.shape[-1]):
+            slice = mask[:, :, i]
+            slice = self.denoising(slice)
+            slice = self.fill_hole(slice)
+            mask[:, :, i] = slice
+        
+        mask = mask.reshape(1, 1, h, w, d).cuda()
         return mask
         
     def labeling(self, mask):
@@ -18,7 +33,7 @@ class Postprocessing:
         """
         m, n = mask.shape
         label = 0
-        res = np.zeros(mask.shape)
+        res = torch.zeros(mask.shape)
         di = [-1, 0, 1, 0]
         dj = [0, 1, 0, -1]
         q = []
@@ -67,11 +82,11 @@ class Postprocessing:
                 
     
 
-mask = [[1,1,1,1,1,1],
-        [1,0,0,1,0,0],
-        [1,1,1,1,0,0],
-        [1,1,1,1,0,0],
-        [1,1,0,1,0,0]]
-mask = np.array(mask)
-mask = Postprocessing()(mask)
-print(mask)    
+# mask = [[1,1,1,1,1,1],
+#         [1,0,0,1,0,0],
+#         [1,1,1,1,0,0],
+#         [1,1,1,1,0,0],
+#         [1,1,0,1,0,0]]
+# mask = np.array(mask)
+# mask = Postprocessing()(mask)
+# print(mask)    

@@ -58,7 +58,7 @@ def concat(y, y_cropped_collection):
     """Concat pieces of cube
 
     Args:
-        y (ground truth): b=1, c, 512, 512, d
+        y (ground truth): b=1, c = 1, 512, 512, d
         y_cropped_collection (pred): collection of cubes: n, b_, c_, 192, 192, 64
     """
     b, c, h, w, d = y.shape
