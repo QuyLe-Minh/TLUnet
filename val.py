@@ -9,7 +9,6 @@ def val(config, dataloader, model, entropy_loss, dice_loss):
 
     with torch.no_grad():
         for X, y in dataloader:
-            y_one_hot = one_hot_encoder(y).cpu()
             y = y.to(config.device)
             
             X_cropped_collection = manual_crop(X)
@@ -18,10 +17,9 @@ def val(config, dataloader, model, entropy_loss, dice_loss):
                 y_cropped = model(X_cropped_collection[i])[0]
                 y_cropped_collection.append(y_cropped.detach().cpu())
             
-            pred = concat(y_one_hot, y_cropped_collection)
-            
+            pred = concat(y, y_cropped_collection)
             test_loss += 0.4*entropy_loss(pred, y).item() + 0.6 * dice_loss(pred, y)
-            correct += (pred.argmax(1) == y.to(config.device)).type(torch.float).mean().item()
+            correct += (pred.to(torch.uint8) == y).type(torch.float).mean().item()
 
     test_loss /= num_batches
     correct /= size

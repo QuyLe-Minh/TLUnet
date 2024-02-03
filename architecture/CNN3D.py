@@ -1,7 +1,7 @@
 from architecture.components import *
 
 class CNN3D(nn.Module):
-    def __init__(self, n_classes = 2):
+    def __init__(self, n_classes = 1):
         super().__init__()
         filters = 32
         deconv = 16
@@ -13,25 +13,29 @@ class CNN3D(nn.Module):
         
         self.deconv1 = nn.Sequential(
             nn.ConvTranspose3d(filters, deconv, 2, stride=2),
-            nn.Conv3d(deconv, n_classes, 1)
+            nn.Conv3d(deconv, n_classes, 1),
+            nn.Sigmoid()
         )
         self.deconv2 = nn.Sequential(
             nn.ConvTranspose3d(filters*2, deconv*2, 2, 2),
             nn.ConvTranspose3d(deconv*2, deconv, 2, 2),
-            nn.Conv3d(deconv, n_classes, 1)
+            nn.Conv3d(deconv, n_classes, 1),
+            nn.Sigmoid()
         )
         self.deconv3 = nn.Sequential(
             nn.ConvTranspose3d(filters*4, deconv*4, 2, 2),
             nn.ConvTranspose3d(deconv*4, deconv*2, 2, 2),
             nn.ConvTranspose3d(deconv*2, deconv, 2, 2),
-            nn.Conv3d(deconv, n_classes, 1)            
+            nn.Conv3d(deconv, n_classes, 1),
+            nn.Sigmoid()          
         )
         self.deconv4 = nn.Sequential(
             nn.ConvTranspose3d(filters*8, deconv*8, 2, 2),
             nn.ConvTranspose3d(deconv*8, deconv*4, 2, 2),
             nn.ConvTranspose3d(deconv*4, deconv*2, 2, 2),
             nn.ConvTranspose3d(deconv*2, deconv, 2, 2),
-            nn.Conv3d(deconv, n_classes, 1)            
+            nn.Conv3d(deconv, n_classes, 1),
+            nn.Sigmoid()           
         )    
             
     def forward(self, x):

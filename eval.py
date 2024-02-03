@@ -1,12 +1,10 @@
-from monai.metrics import DiceMetric, compute_iou
+from metrics.metrics import *
 from utils import one_hot_encoder, manual_crop, concat
 from architecture.CNN3D import CNN3D
-import torch
 
 def eval(config, dataloader, model_state_dict):
     model = CNN3D().to(config.device)
     model.load_state_dict(torch.load(model_state_dict))
-    model.eval()
     print("Successful loading model!!!")   
     
     size = len(dataloader.dataset)
@@ -14,7 +12,7 @@ def eval(config, dataloader, model_state_dict):
 
     with torch.no_grad():
         for X, y in dataloader:
-            y_one_hot = one_hot_encoder(y)
+            y = y.to(config.device)
             
             X_cropped_collection = manual_crop(X)
             y_cropped_collection = []
@@ -22,11 +20,10 @@ def eval(config, dataloader, model_state_dict):
                 y_cropped = model(X_cropped_collection[i])[0]
                 y_cropped_collection.append(y_cropped.detach().cpu())
             
-            pred = concat(y_one_hot, y_cropped_collection)
-            pred = one_hot_encoder(torch.argmax(pred, dim = 1).unsqueeze(1))
+            pred = concat(y, y_cropped_collection)
             
-            dice_score_liver += DiceMetric()(pred, y.to(config.device))
-            iou_score_liver += compute_iou(pred, y)
+            dice_score_liver += dice(pred, y)
+            iou_score_liver += iou(pred, y)
 
     dice_score_liver /= size
     iou_score_liver /= size
