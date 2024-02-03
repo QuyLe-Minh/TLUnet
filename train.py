@@ -37,7 +37,7 @@ def training(config, train_loader, val_loader, mode):
         print("Load model tlu3d...")
     model.train()
     
-    entropy_loss = nn.CrossEntropyLoss()
+    # entropy_loss = nn.CrossEntropyLoss()
     entropy_loss = nn.BCELoss()
     dice_loss = DiceLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-4)
