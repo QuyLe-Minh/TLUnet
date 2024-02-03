@@ -14,7 +14,7 @@ class Postprocessing:
         Returns:
             torch tensor cuda 1, 1, H, W, D
         """
-        mask = pred.reshape(pred.shape[-3:]) #H, W, D
+        mask = pred.reshape(pred.shape[-3:]).cpu() #H, W, D
         h, w, d = mask.shape
         for i in range(mask.shape[-1]):
             slice = mask[:, :, i]
@@ -59,7 +59,7 @@ class Postprocessing:
 
     def fill_hole(self, mask):
         mask = ndimage.binary_fill_holes(mask).astype(int) 
-        return mask  
+        return torch.tensor(mask) 
 
     def denoising(self, mask):
         label, mx = -1, -1
