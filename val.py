@@ -1,6 +1,5 @@
 import torch
 from utils import manual_crop, concat
-from math import *
 from metrics.metrics import *
 
 def val(config, dataloader, model, entropy_loss, dice_loss):

@@ -1,5 +1,4 @@
 import torch
-from torch import nn
 from math import *
 import os
 
@@ -30,17 +29,6 @@ def one_hot_encoder(input, n_classes=2):
     one_hot[:, 1, :, :, :] = torch.where(tmp == 1, 1, 0)
     
     return one_hot.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-
-def init_weights(m):
-  if isinstance(m, nn.Conv3d):
-    torch.nn.init.kaiming_normal(m.weight)
-    if m.bias is not None:
-      torch.nn.init.zeros_(m.bias)
-      
-  if isinstance(m, nn.ConvTranspose3d):
-    torch.nn.init.kaiming_normal(m.weight)
-    if m.bias is not None:
-      torch.nn.init.zeros_(m.bias)
       
       
 def manual_crop(X):

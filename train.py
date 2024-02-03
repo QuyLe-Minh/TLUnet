@@ -33,7 +33,7 @@ def train(config, dataloader, model, entropy_loss, dice_loss, optimizer):
 def training(config, train_loader, val_loader, mode):
     model = TLUnet().to(config.device)
     if mode != "training":
-        model.load_state_dict(torch.load("cnn3d.pt"))
+        model.load_state_dict(torch.load("tlu.pt"))
         print("Load model tlu3d...")
     model.train()
     

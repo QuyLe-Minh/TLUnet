@@ -5,7 +5,7 @@ def iou(pred, gt):
     """Calculate iou score
 
     Args:
-        pred (_Tensor_): unormalized B, C, H, W, D
+        pred (_Tensor_): normalized B, C, H, W, D
         gt (_Tensor_): one hot vector B, C, H, W, D
     """
     eps = 1e-5
