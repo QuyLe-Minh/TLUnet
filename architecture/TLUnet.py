@@ -36,7 +36,8 @@ class TLUnet(nn.Module):
         self.head = nn.Sequential(
             ConvBlock(3, filters//2, filters//2),
             ConvBlock(3, filters//2, filters//2),
-            nn.Conv3d(filters//2, n_classes, 1)
+            nn.Conv3d(filters//2, n_classes, 1),
+            nn.Sigmoid()
         )
     
     def forward(self, input):

@@ -22,4 +22,4 @@ if __name__ == "__main__":
     val_loader = DataLoader(val_dataset, 1, shuffle=False, num_workers=2)
 
     training(config, train_loader, val_loader, config.mode)
-    eval(config, val_loader, "model.pt")
+    eval(config, val_loader, "tlu.pt")

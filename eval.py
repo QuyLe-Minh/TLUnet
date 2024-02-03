@@ -1,19 +1,20 @@
 from metrics.metrics import *
-from utils import one_hot_encoder, manual_crop, concat
-from architecture.TLUnet import TLUnet
+from utils import manual_crop, concat
+from architecture.CNN3D import CNN3D
+from postprocessing.postprocessing import Postprocessing
 
 def eval(config, dataloader, model_state_dict):
-    model = TLUnet().to(config.device)
+    model = CNN3D().to(config.device)
     model.load_state_dict(torch.load(model_state_dict))
-    model.eval()
     print("Successful loading model!!!")   
     
     size = len(dataloader.dataset)
     dice_score_liver, iou_score_liver = 0, 0
+    postprocess = Postprocessing()
 
     with torch.no_grad():
         for X, y in dataloader:
-            y_one_hot = one_hot_encoder(y)
+            y = y.to(config.device)
             
             X_cropped_collection = manual_crop(X)
             y_cropped_collection = []
@@ -21,13 +22,14 @@ def eval(config, dataloader, model_state_dict):
                 y_cropped = model(X_cropped_collection[i])
                 y_cropped_collection.append(y_cropped.detach().cpu())
             
-            pred = concat(y_one_hot, y_cropped_collection)
-            pred = one_hot_encoder(torch.argmax(pred, dim = 1).unsqueeze(1))
+            pred = concat(y, y_cropped_collection)
+            pred = postprocess(pred)
             
-            dice_score_liver += dice(pred[:, 1], y_one_hot[:, 1])
-            iou_score_liver += iou(pred[:, 1], y_one_hot[:, 1])
+            dice_score_liver += dice(pred, y)
+            iou_score_liver += iou(pred, y)
+            
+            print(dice(pred, y), iou(pred, y))
 
     dice_score_liver /= size
     iou_score_liver /= size
     print(f"Evaluation: \n Dice score liver: {(100 * dice_score_liver):>0.3f}%, IoU score liver: {(iou_score_liver * 100):>0.3f}% \n")
-
