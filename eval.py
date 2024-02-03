@@ -22,7 +22,7 @@ def eval(config, dataloader, model_state_dict):
                 y_cropped = model(X_cropped_collection[i])[0]
                 y_cropped_collection.append(y_cropped.detach().cpu())
             
-            pred = concat(y, y_cropped_collection)
+            pred = concat(y, y_cropped_collection).to(torch.uint8)
             pred = postprocess(pred)
             
             dice_score_liver += dice(pred, y)
