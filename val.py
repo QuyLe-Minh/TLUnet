@@ -1,5 +1,5 @@
 import torch
-from utils import manual_crop, concat
+from utils import one_hot_encoder, manual_crop, concat
 from math import *
 from metrics.metrics import *
 
@@ -20,8 +20,9 @@ def val(config, dataloader, model, entropy_loss, dice_loss):
                 y_cropped_collection.append(y_cropped.detach().cpu())
             
             pred = concat(y, y_cropped_collection)
-            test_loss += 0.4*entropy_loss(pred, y).item() + 0.6 * dice_loss(pred, y)
-            correct += (pred.to(torch.uint8) == y.to(torch.uint8)).type(torch.float).mean().item()
+
+            test_loss += dice_loss(pred, y)
+            correct += (torch.round(pred).to(torch.uint8) == torch.round(y).to(torch.uint8)).type(torch.float).mean().item()
 
             dice_score_liver += dice(pred, y)
             iou_score_liver += iou(pred, y)
