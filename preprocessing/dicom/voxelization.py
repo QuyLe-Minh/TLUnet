@@ -39,18 +39,13 @@ def voxelization(folder_path):
     row_space, col_space = data.PixelSpacing
     thickness = data.SliceThickness
     
-    anisotropic_diffusion = apply_anisotropic_diffusion()
-    
     cube = torch.empty((1, 512, 512, len(files)))
     for i, file in enumerate(files):
         path = os.path.join(folder_path, file)
         data = dcm.dcmread(path)
         arr = data.pixel_array
-        arr = window_image(arr)
-        
-        arr = filter(anisotropic_diffusion, arr)
 
-        cube[:, :, :, i] = arr.unsqueeze(0)
+        cube[0, :, :, i] = torch.Tensor(arr)
         
     return cube, row_space, col_space, thickness
 
@@ -60,8 +55,18 @@ def run(cube_path, seg_path):
     
     _, h, w, d = cube.shape
     
-    transform = Resized(keys=["image", "label"], spatial_size=(floor(h * scale_x), floor(w * scale_y), floor(d * scale_z)), mode="trilinear")
-    transformed = transform({"image": cube, "label":seg})
-    return transformed["image"], transformed["label"]
+    transform = Resized(["image", "label"], spatial_size=(floor(h * scale_x), floor(w * scale_y), floor(d * scale_z)), mode = "trilinear")
+    transformed = transform({"image":cube, "label":seg})   
+    cube, seg = transformed["image"], transformed["label"]
+
+    _, h, w, d = cube.shape
+
+    anisotropic_diffusion = apply_anisotropic_diffusion()
+
+    cube = window_image(cube[0])
+    cube = filter(anisotropic_diffusion, cube)
+    cube = cube.unsqueeze(0)
+    
+    return cube, seg 
     
     

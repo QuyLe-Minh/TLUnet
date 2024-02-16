@@ -36,7 +36,7 @@ def window_image(img, window_center = -300, window_width = 1400, intercept = 0, 
         img = (img - img_min) / (img_max - img_min)*255.0 
     return img
     
-def apply_anisotropic_diffusion(num_iterations=20, time_step=0.125, conductance=1.5):
+def apply_anisotropic_diffusion(num_iterations=10, time_step=0.0625, conductance=1.5):
     anisotropic_diffusion_filter = sitk.GradientAnisotropicDiffusionImageFilter()
     anisotropic_diffusion_filter.SetNumberOfIterations(num_iterations)
     anisotropic_diffusion_filter.SetTimeStep(time_step)
