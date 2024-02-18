@@ -9,10 +9,11 @@ def segmentation(path):
 
 
     Returns:
-        seg: 3D label 1,D,H,W
+        seg: 3D label 1,H,W,D
     """
     seg = sitk.ReadImage(path)
     seg = torch.tensor(sitk.GetArrayFromImage(seg))
+    seg = seg.permute(1, 2, 0)
     seg = seg.unsqueeze(0)
     
     return seg
@@ -21,7 +22,7 @@ def segmentation(path):
 def voxelization(path):
     header = sitk.ReadImage(path)
     scale_x, scale_y, scale_z = header.GetSpacing()
-    original_cube = torch.tensor(sitk.GetArrayFromImage(header))
+    original_cube = torch.tensor(sitk.GetArrayFromImage(header)).permute(1, 2, 0)
     
     return original_cube.unsqueeze(0), scale_x, scale_y, scale_z
 
@@ -30,13 +31,13 @@ def run(cube_path, seg_path):
     cube, scale_x, scale_y, scale_z = voxelization(cube_path)
     seg = segmentation(seg_path)
     
-    _, d, h, w = cube.shape
+    _, h, w, d = cube.shape
     
-    transform = Resized(["image", "label"], spatial_size=(floor(d * scale_z), floor(h * scale_x), floor(w * scale_y)), mode = "trilinear")
+    transform = Resized(["image", "label"], spatial_size=(floor(h * scale_x), floor(w * scale_y), floor(d * scale_z)))
     transformed = transform({"image":cube, "label":seg})   
     cube, seg = transformed["image"], transformed["label"]
 
-    _, d, h, w = cube.shape
+    _, h, w, d = cube.shape
 
     anisotropic_diffusion = apply_anisotropic_diffusion()
 
