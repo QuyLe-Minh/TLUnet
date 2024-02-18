@@ -11,6 +11,7 @@ class Config:
     n_freeze = 36
     train = [f"dataset/train_tlu/{file}" for file in os.listdir("dataset/train_tlu")]
     val = [f"dataset/val_tlu/{file}" for file in os.listdir("dataset/val_tlu")]
+    model_weight = "cnn3d_3.pt"
     mode = "tuning"
 
 config = Config()

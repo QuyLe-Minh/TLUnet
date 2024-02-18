@@ -30,6 +30,14 @@ def train(config, dataloader, model, entropy_loss, dice_loss, optimizer):
     correct = correct / len(dataloader)
     print(f"Accuracy: {100 * correct:>7f}%")
     
+def applyWeight(config, model, model_weight):
+    weight = torch.load(model_weight)
+    for i, (name, param) in enumerate(model.named_parameters()):
+        if i >= config.n_freeze: break
+        
+        param.data = weight[name]
+        param.requires_grad = False
+    
     
 def training(config, train_loader, val_loader, mode):
     model = TLUnet().to(config.device)
@@ -37,6 +45,8 @@ def training(config, train_loader, val_loader, mode):
         path = "tlu.pt" 
         model.load_state_dict(torch.load(path))
         print(f"Load model {path}...")
+        
+    applyWeight(config, model, config.model_weight)
     model.train()
     
     # entropy_loss = nn.CrossEntropyLoss()
@@ -47,7 +57,6 @@ def training(config, train_loader, val_loader, mode):
     
     torch.cuda.empty_cache()
     best_one = 100
-    count = 0
     
     for t in range(config.epochs):
         print(f"Epoch {t+1}\n-------------------------------")
@@ -55,7 +64,6 @@ def training(config, train_loader, val_loader, mode):
         val_loss = val(config, val_loader, model, entropy_loss, dice_loss)
 
         if val_loss < best_one:
-            count = 0
             best_one = val_loss
             torch.save(model.state_dict(), "cnn3d_3.pt")
         torch.save(model.state_dict(), "cnn3d.pt")
