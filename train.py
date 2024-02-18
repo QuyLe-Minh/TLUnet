@@ -1,8 +1,11 @@
 from monai.losses import DiceLoss
-from val import *
 from architecture.CNN3D import CNN3D
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch import nn
+import torch
+from utils import manual_crop, concat
+from metrics.metrics import *
+
 
 def train(config, dataloader, model, entropy_loss, dice_loss, optimizer):
     size = len(dataloader.dataset)
@@ -30,6 +33,38 @@ def train(config, dataloader, model, entropy_loss, dice_loss, optimizer):
     correct = correct / len(dataloader)
     print(f"Accuracy: {100 * correct:>7f}%")
     
+def val(config, dataloader, model, dice_loss):
+    size = len(dataloader.dataset)
+    num_batches = len(dataloader)
+    test_loss, correct = 0, 0
+    dice_score_liver, iou_score_liver = 0, 0
+
+    with torch.no_grad():
+        for X, y in dataloader:
+            y = y.to(torch.float).to(config.device)
+            
+            X_cropped_collection = manual_crop(X)
+            y_cropped_collection = []
+            for i in range(len(X_cropped_collection)):
+                y_cropped = model(X_cropped_collection[i])[0]
+                y_cropped_collection.append(y_cropped.detach().cpu())
+            
+            pred = concat(y, y_cropped_collection)
+
+            test_loss += dice_loss(pred, y)
+            correct += (torch.round(pred).to(torch.uint8) == torch.round(y).to(torch.uint8)).type(torch.float).mean().item()
+
+            dice_score_liver += dice(pred, y)
+            iou_score_liver += iou(pred, y)
+
+    test_loss /= num_batches
+    correct /= size
+    print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+    dice_score_liver /= size
+    iou_score_liver /= size
+    print(f"Dice score liver: {(100 * dice_score_liver):>0.3f}%, IoU score liver: {(iou_score_liver * 100):>0.3f}% \n")
+    return test_loss
+    
     
 def training(config, train_loader, val_loader, mode):
     model = CNN3D().to(config.device)
@@ -50,7 +85,7 @@ def training(config, train_loader, val_loader, mode):
     for t in range(config.epochs):
         print(f"Epoch {t+1}\n-------------------------------")
         train(config, train_loader, model, entropy_loss, dice_loss, optimizer)
-        val_loss = val(config, val_loader, model, entropy_loss, dice_loss)
+        val_loss = val(config, val_loader, model, dice_loss)
 
         if val_loss < best_one:
             best_one = val_loss
