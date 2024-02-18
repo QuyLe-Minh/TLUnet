@@ -17,7 +17,7 @@ def train(config, dataloader, model, entropy_loss, dice_loss, optimizer):
         # forward + backward + optimize
         pred = model(X) #output, ds1, ds2, ds3 (least to most)
         
-        loss = 0.4 * (entropy_loss(pred[0], y) * 8 + entropy_loss(pred[1], y) * 1 + entropy_loss(pred[2], y) * 2 + entropy_loss(pred[3], y) * 4) + 0.6 * dice_loss(pred[0], y)
+        loss = entropy_loss(pred[0], y) * 8 + entropy_loss(pred[1], y) * 1 + entropy_loss(pred[2], y) * 2 + entropy_loss(pred[3], y) * 4 + dice_loss(pred[0], y)
         loss.backward()
         optimizer.step()
 
@@ -42,7 +42,7 @@ def training(config, train_loader, val_loader, mode):
     # entropy_loss = nn.CrossEntropyLoss()
     entropy_loss = nn.BCELoss()
     dice_loss = DiceLoss(squared_pred = True)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=1e-3) #3e-5
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-4) #3e-5
     scheduler = ReduceLROnPlateau(optimizer, 'min')
     
     torch.cuda.empty_cache()
