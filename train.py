@@ -6,7 +6,7 @@ import torch
 from utils import manual_crop, concat
 from metrics.metrics import *
 
-def val(config, dataloader, model, entropy_loss, dice_loss):
+def val(config, dataloader, model, dice_loss):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     test_loss, correct = 0, 0
@@ -95,7 +95,7 @@ def training(config, train_loader, val_loader, mode):
     for t in range(config.epochs):
         print(f"Epoch {t+1}\n-------------------------------")
         train(config, train_loader, model, entropy_loss, dice_loss, optimizer)
-        val_loss = val(config, val_loader, model, entropy_loss, dice_loss)
+        val_loss = val(config, val_loader, model, dice_loss)
 
         if val_loss < best_one:
             best_one = val_loss
