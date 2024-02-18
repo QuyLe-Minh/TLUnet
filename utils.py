@@ -4,14 +4,13 @@ import os
 
 class Config:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    batch_size = 6
+    batch_size = 7
     epochs = 1000
     n_classes = 2
-    patience = 3
     n_freeze = 36
     train = [f"dataset/train_cnn3d/{file}" for file in os.listdir("dataset/train_cnn3d")]
     val = [f"dataset/val_cnn3d/{file}" for file in os.listdir("dataset/val_cnn3d")]
-    mode = "training"
+    mode = "tuning"
 
 config = Config()
 
@@ -30,8 +29,7 @@ def one_hot_encoder(input, n_classes=2):
     one_hot[:, 0, :, :, :] = torch.where(tmp == 0, 1, 0)
     one_hot[:, 1, :, :, :] = torch.where(tmp == 1, 1, 0)
     
-    return one_hot.cuda()
-      
+    return one_hot.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
       
 def manual_crop(X):
     X_cropped_collection = []
@@ -51,7 +49,7 @@ def manual_crop(X):
                     start_k = d - 64
                 else:
                     start_k = k*64
-                X_cropped = torch.from_numpy(X[:, :, start_i : start_i+192, start_j : start_j+192, start_k : start_k+64])
+                X_cropped = X_cropped = X[0, :, start_i : start_i+192, start_j : start_j+192, start_k : start_k+64]
                 X_cropped_collection.append(X_cropped)
                 
     n_cubes = len(X_cropped_collection)
