@@ -9,10 +9,11 @@ def segmentation(path):
 
 
     Returns:
-        seg: 3D label 1,H,W,D
+        seg: 3D label 1,D,H,W
     """
     seg = nib.load(path)
     seg = torch.tensor(seg.get_fdata())
+    seg = seg.permute(2, 0, 1)
     seg = seg.unsqueeze(0)
     
     return seg
@@ -22,29 +23,29 @@ def voxelization(path):
     """Create isometric cube
 
     Returns:
-        cube: shape (1, H, W, D)
-        seg: shape (1,H,W,D)
+        cube: shape (1, D, H, W)
+        seg: shape (1, D, H, W)
     """
     loaded = nib.load(path)
     header = loaded.header
     scale_x, scale_y, scale_z = header.get_zooms()
-    h, w, d = header.get_data_shape()
-    original_cube = loaded.get_fdata()  #numpy
+    original_cube = torch.from_numpy(loaded.get_fdata())  #numpy
+    original_cube = original_cube.permute(2, 0, 1)
 
-    return torch.tensor(original_cube).unsqueeze(0), scale_x, scale_y, scale_z
+    return original_cube.unsqueeze(0), scale_x, scale_y, scale_z
 
 
 def run(cube_path, seg_path):
     cube, scale_x, scale_y, scale_z = voxelization(cube_path)
     seg = segmentation(seg_path)
     
-    _, h, w, d = cube.shape
+    _, d, h, w = cube.shape
     
-    transform = Resized(["image", "label"], spatial_size=(floor(h * scale_x), floor(w * scale_y), floor(d * scale_z)), mode = "trilinear")
+    transform = Resized(["image", "label"], spatial_size=(floor(d * scale_z), floor(h * scale_x), floor(w * scale_y)), mode = "trilinear")
     transformed = transform({"image":cube, "label":seg})   
     cube, seg = transformed["image"], transformed["label"]
 
-    _, h, w, d = cube.shape
+    _, d, h, w = cube.shape
 
     anisotropic_diffusion = apply_anisotropic_diffusion()
 
