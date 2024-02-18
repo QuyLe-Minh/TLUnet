@@ -2,7 +2,7 @@ import torch
 from preprocessing.nii.filter import *
 import nibabel as nib
 from math import *
-from monai.transforms import Compose, Rotate90d, Resized
+from monai.transforms import Resized
 
 def segmentation(path):
     """create segmentation
