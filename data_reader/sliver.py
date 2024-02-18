@@ -23,15 +23,13 @@ def read_sliver(folder_path, sample_dataset, sample_val):
                 dataset = {}
     
                 dataset["data"] = transformed[j]["image"]
-                dataset["value"] = torch.ceil(transformed[j]["label"]).to(torch.uint8)
-                dataset["value"] = torch.clamp(dataset["value"], min = 0, max = 1)
+                dataset["value"] = torch.clamp(transformed[j]["label"], min = 0, max = 1)
                 torch.save(dataset, f"dataset/train_tlu/train_{sample_dataset}.pth")
                 sample_dataset += 1
         else:
             val = {}
             val["data"] = cube
-            val["value"] = torch.ceil(seg).to(torch.uint8)
-            val["value"] = torch.clamp(val["value"], min = 0, max = 1)
+            val["value"] = torch.clamp(seg, min = 0, max = 1)
             torch.save(val, f"dataset/val_tlu/val_{sample_val}.pth")
             sample_val +=1
             
