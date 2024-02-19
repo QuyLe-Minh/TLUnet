@@ -80,7 +80,7 @@ def training(config, train_loader, val_loader, mode):
     scheduler = ReduceLROnPlateau(optimizer, 'min')
     
     torch.cuda.empty_cache()
-    best_one = 0.125934 
+    best_one = 0.086234
     
     for t in range(config.epochs):
         print(f"Epoch {t+1}\n-------------------------------")
