@@ -79,14 +79,3 @@ class Postprocessing:
                 if res[i, j] != label:
                     mask[i, j] = 0
         return mask
-                
-    
-
-# mask = [[1,1,1,1,1,1],
-#         [1,0,0,1,0,0],
-#         [1,1,1,1,0,0],
-#         [1,1,1,1,0,0],
-#         [1,1,0,1,0,0]]
-# mask = np.array(mask)
-# mask = Postprocessing()(mask)
-# print(mask)    
