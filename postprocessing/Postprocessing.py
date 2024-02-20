@@ -58,6 +58,7 @@ class Postprocessing:
         return res, label                              
 
     def fill_hole(self, mask):
+        
         mask = ndimage.binary_fill_holes(mask).astype(int) 
         return torch.tensor(mask) 
 

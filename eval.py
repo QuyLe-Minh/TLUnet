@@ -8,6 +8,8 @@ def eval(config, dataloader, model_state_dict):
     model.load_state_dict(torch.load(model_state_dict))
     print("Successful loading model!!!")   
     
+    model.eval()
+    
     size = len(dataloader.dataset)
     dice_score_liver, iou_score_liver = 0, 0
     postprocess = Postprocessing()

@@ -11,6 +11,8 @@ def val(config, dataloader, model, dice_loss):
     num_batches = len(dataloader)
     test_loss, correct = 0, 0
     dice_score_liver, iou_score_liver = 0, 0
+    
+    model.eval()
 
     with torch.no_grad():
         for X, y in dataloader:
@@ -36,6 +38,9 @@ def val(config, dataloader, model, dice_loss):
     iou_score_liver /= size
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
     print(f"Dice score liver: {(100 * dice_score_liver):>0.3f}%, IoU score liver: {(iou_score_liver * 100):>0.3f}% \n")
+    
+    model.train()
+    
     return test_loss
 
 def train(config, dataloader, model, entropy_loss, dice_loss, optimizer):
