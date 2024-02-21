@@ -1,7 +1,6 @@
 from metrics.metrics import *
 from utils import manual_crop, concat
 from architecture.CNN3D import CNN3D
-from postprocessing.postprocessing import Postprocessing
 import torch.nn as nn
 
 def eval(config, dataloader, model_state_dict):
@@ -10,13 +9,9 @@ def eval(config, dataloader, model_state_dict):
     print("Successful loading model!!!")
 
     model.eval()
-    # for m in model.modules():
-    #     if isinstance(m, nn.BatchNorm3d):
-    #          m.track_running_stats=False
     
     size = len(dataloader.dataset)
     dice_score_liver, iou_score_liver = 0, 0
-    postprocess = Postprocessing()
 
     idx = 0
 
@@ -41,7 +36,7 @@ def eval(config, dataloader, model_state_dict):
             dice_score_liver += dice(pred, y)
             iou_score_liver += iou(pred, y)
             
-            print(dice(pred, y), s)
+            print(dice(pred, y), iou(pred, y), s)
 
     dice_score_liver /= size
     iou_score_liver /= size
