@@ -35,6 +35,22 @@ def acc(pred, gt):
         gt (_Tensor_): cuda:0
     """
     mask = one_hot_encoder(pred)
-    return torch.mean(mask == gt)            
+    return torch.mean(mask == gt)  
+
+def dice_global(pred, gt):
+    pass
+
+def dice_per_case(pred, gt):
+    pass
+
+def VOE(pred, gt):
+    # IOU loss
+
+    return (1 - iou(pred, gt)) * 100
+
+def HD95(pred, gt):
+    pass
+
+
     
     
