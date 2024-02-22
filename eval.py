@@ -1,7 +1,6 @@
 from metrics.metrics import *
 from utils import manual_crop, concat
 from architecture.TLUnet import TLUnet
-from postprocessing.postprocessing import Postprocessing
 
 def eval(config, dataloader, model_state_dict):
     model = TLUnet().to(config.device)
@@ -12,7 +11,6 @@ def eval(config, dataloader, model_state_dict):
     
     size = len(dataloader.dataset)
     dice_score_liver, iou_score_liver = 0, 0
-    postprocess = Postprocessing()
 
     idx = 0
 
