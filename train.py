@@ -54,7 +54,7 @@ def train(config, dataloader, model, entropy_loss, dice_loss, optimizer):
         optimizer.zero_grad()
 
         # forward + backward + optimize
-        pred = model(X) #output, ds1, ds2, ds3 (least to most)
+        pred = model(X) 
         
         loss = entropy_loss(pred, y) * 0.4 + 0.6 * dice_loss(pred, y)
         loss.backward()
@@ -79,26 +79,33 @@ def applyWeight(config, model, model_weight):
     
     
 def training(config, train_loader, val_loader, mode):
+    torch.cuda.empty_cache()
+    
     model = TLUnet().to(config.device)
     if mode != "training":
         path = "tlu.pt" 
         model.load_state_dict(torch.load(path))
-        applyWeight(config, model, path)
+        for i, (name, param) in enumerate(model.named_parameters()):
+            if i>=config.n_freeze: break
+            param.requires_grad = False
         print(f"Load model {path}...")
 
-    else: applyWeight(config, model, config.model_weight)
+    else: 
+        applyWeight(config, model, config.model_weight)
+
+    total_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print("Total number of trainable parameters:", total_trainable_params)
 
     model.train()
     
     # entropy_loss = nn.CrossEntropyLoss()
     entropy_loss = nn.BCELoss()
     dice_loss = DiceLoss(squared_pred = True)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-4) #3e-5
+    optimizer = torch.optim.Adam(model.parameters(), lr=3e-5) #3e-5
     # scheduler = ReduceLROnPlateau(optimizer, 'min')
     scheduler = StepLR(optimizer, step_size=30, gamma=1/3)
     
-    torch.cuda.empty_cache()
-    best_one = 0.03
+    best_one = 0.033312
     
     for t in range(config.epochs):
         print(f"Epoch {t+1}\n-------------------------------")
