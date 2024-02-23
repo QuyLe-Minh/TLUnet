@@ -83,6 +83,7 @@ def training(config, train_loader, val_loader, mode):
     if mode != "training":
         path = "tlu.pt" 
         model.load_state_dict(torch.load(path))
+        applyWeight(config, model, path)
         print(f"Load model {path}...")
 
     else: applyWeight(config, model, config.model_weight)
@@ -97,7 +98,7 @@ def training(config, train_loader, val_loader, mode):
     scheduler = StepLR(optimizer, step_size=30, gamma=1/3)
     
     torch.cuda.empty_cache()
-    best_one = 100
+    best_one = 0.03
     
     for t in range(config.epochs):
         print(f"Epoch {t+1}\n-------------------------------")

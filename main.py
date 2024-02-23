@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from train import training
 from utils import config
 from eval import eval
+torch.manual_seed(1)
     
 
 if __name__ == "__main__":
