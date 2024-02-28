@@ -8,9 +8,9 @@ class Config:
     epochs = 1000
     patience = 10
     n_freeze = 36
-    train = [f"dataset/train_tlu/{file}" for file in os.listdir("dataset/train_tlu")]
-    val = [f"dataset/val_tlu/{file}" for file in os.listdir("dataset/val_tlu")]
-    model_weight = "cnn3d_3.pt"
+    train = [f"dataset/train_synapse/{file}" for file in os.listdir("dataset/train_synapse")]
+    val = [f"dataset/val_synapse/{file}" for file in os.listdir("dataset/val_synapse")]
+    model_weight = "cnn3d_2.pt"
     mode = "tuning"
 
 config = Config()
