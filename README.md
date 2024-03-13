@@ -48,20 +48,7 @@ The dataset folders for Synapse should be organized as follows:
  
  The dataset folders for ACDC should be organized as follows: 
 
-```
-./DATASET_Acdc/
-  ├── unetr_pp_raw/
-      ├── unetr_pp_raw_data/
-           ├── Task01_ACDC/
-              ├── imagesTr/
-              ├── imagesTs/
-              ├── labelsTr/
-              ├── labelsTs/
-              ├── dataset.json
-           ├── Task001_ACDC
-       ├── unetr_pp_cropped_data/
-           ├── Task001_ACDC
- ```
+
 
  
 Please refer to [Setting up the datasets](https://github.com/282857341/nnFormer) on nnFormer repository for more details.
