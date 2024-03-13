@@ -92,5 +92,5 @@ bash evaluation_scripts/run_evaluation_synapse.sh
 <hr />
 
 ## Acknowledgement
-This repository is built based on [UNETR++](https://github.com/282857341/nnFormer) repository.
+This repository is built based on [UNETR++](https://github.com/Amshaker/unetr_plus_plus) repository.
 
