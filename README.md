@@ -66,7 +66,7 @@ bash training_scripts/run_training_synapse.sh
 
 To reproduce the results of TLUnet: 
 
-1- Download [Synapse weights](https://drive.google.com/file/d/13JuLMeDQRR_a3c3tr2V2oav6I29fJoBa) and paste ```model_final_checkpoint.model``` in the following path:
+1- Download [Synapse weights](https://hcmuteduvn-my.sharepoint.com/:u:/g/personal/quy_leemin_hcmut_edu_vn/EfRoW648nEtBvKYGBofm2-IB7WlskqDOfsmDMALfbcHYaw?e=ItF7CX) and paste ```model_final_checkpoint.model``` in the following path:
 ```shell
 tlunet/evaluation/unetr_pp_synapse_checkpoint/unetr_pp/3d_fullres/Task002_Synapse/unetr_pp_trainer_synapse__unetr_pp_Plansv2.1/fold_0/
 ```
