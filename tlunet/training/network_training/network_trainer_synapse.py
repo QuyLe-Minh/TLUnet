@@ -387,10 +387,17 @@ class NetworkTrainer_synapse(object):
             if 'amp_grad_scaler' in checkpoint.keys():
                 self.amp_grad_scaler.load_state_dict(checkpoint['amp_grad_scaler'])
 
-        self.network.load_state_dict(new_state_dict)
+        d = self.network.state_dict()
+        filtered_dict = {k:v for k, v in new_state_dict.items() if k in d}
+        d.update(filtered_dict)
+        
+        self.network.load_state_dict(d)
         self.epoch = checkpoint['epoch']
         if train:
             optimizer_state_dict = checkpoint['optimizer_state_dict']
+            # print(optimizer_state_dict["param_groups"])
+            self.optimizer.param_groups[0]["lr"] = optimizer_state_dict["param_groups"][0]["lr"]
+            optimizer_state_dict = None  #Change
             if optimizer_state_dict is not None:
                 self.optimizer.load_state_dict(optimizer_state_dict)
 
@@ -687,7 +694,6 @@ class NetworkTrainer_synapse(object):
                 l.backward()
                 self.optimizer.step()
 
-        print(output.shape)
         if run_online_evaluation:
             self.run_online_evaluation(output, target)
 
