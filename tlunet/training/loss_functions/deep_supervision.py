@@ -14,6 +14,7 @@
 
 
 from torch import nn
+import torch
 
 
 class MultipleOutputLoss2(nn.Module):
@@ -26,6 +27,7 @@ class MultipleOutputLoss2(nn.Module):
         """
         super(MultipleOutputLoss2, self).__init__()
         self.weight_factors = weight_factors
+        loss.ce.weight = torch.tensor([ 1.0000,  3.5220,  6.1049,  4.6267, 20.8959, 29.9953,  1.0000,  3.1058, 9.3213,  8.8012, 13.2363, 11.6498, 1., 1.]).cuda()
         self.loss = loss
 
     def forward(self, x, y):

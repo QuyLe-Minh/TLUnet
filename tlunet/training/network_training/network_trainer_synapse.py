@@ -123,7 +123,7 @@ class NetworkTrainer_synapse(object):
         self.save_every = 50
         self.save_latest_only = False  # if false it will not store/overwrite _latest but separate files each
         # time an intermediate checkpoint is created
-        self.save_intermediate_checkpoints = False  # whether or not to save checkpoint_latest
+        self.save_intermediate_checkpoints = True  # whether or not to save checkpoint_latest
         self.save_best_checkpoint = True  # whether or not to save the best checkpoint according to self.best_val_eval_criterion_MA
         self.save_final_checkpoint = True  # whether or not to save the final checkpoint
 
@@ -386,12 +386,8 @@ class NetworkTrainer_synapse(object):
             self._maybe_init_amp()
             if 'amp_grad_scaler' in checkpoint.keys():
                 self.amp_grad_scaler.load_state_dict(checkpoint['amp_grad_scaler'])
-
-        d = self.network.state_dict()
-        filtered_dict = {k:v for k, v in new_state_dict.items() if k in d}
-        d.update(filtered_dict)
         
-        self.network.load_state_dict(d)
+        self.network.load_state_dict(new_state_dict)
         self.epoch = checkpoint['epoch']
         if train:
             optimizer_state_dict = checkpoint['optimizer_state_dict']

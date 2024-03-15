@@ -46,7 +46,8 @@ class tlu_trainer_synapse(Trainer_synapse):
         super().__init__(plans_file, fold, output_folder, dataset_directory, batch_dice, stage, unpack_data,
                          deterministic, fp16)
         self.max_num_epochs = 1000
-        self.initial_lr = 1e-2
+        # self.initial_lr = 1e-2
+        self.initial_lr = 5e-5
         self.deep_supervision_scales = None
         self.ds_loss_weights = None
         self.pin_memory = True
@@ -64,8 +65,8 @@ class tlu_trainer_synapse(Trainer_synapse):
         self.num_heads = [6, 12, 24, 48]
         self.embedding_patch_size = [2, 4, 4]
         self.window_size = [4, 4, 8, 4]
-        # self.deep_supervision = True
-        self.deep_supervision = False
+        self.deep_supervision = True
+        # self.deep_supervision = False
 
     def initialize(self, training=True, force_load_plans=False):
         """
@@ -83,7 +84,6 @@ class tlu_trainer_synapse(Trainer_synapse):
             if force_load_plans or (self.plans is None):
                 self.load_plans_file()
 
-            # self.plans['plans_per_stage'][self.stage]['pool_op_kernel_sizes'] = [[2, 4, 4], [2, 2, 2], [2, 2, 2]]
             self.plans['plans_per_stage'][self.stage]['pool_op_kernel_sizes'] = [[2, 2, 2], [2, 2, 2], [2, 2, 2]]
             self.process_plans(self.plans)
 

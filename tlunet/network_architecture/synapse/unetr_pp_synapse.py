@@ -35,12 +35,12 @@ class TLUnet(SegmentationNetwork):
         self.head = nn.Sequential(
             ConvBlock(3, filters//2, filters//2),
             ConvBlock(3, filters//2, filters//2),
-            UnetOutBlock(spatial_dims=3, in_channels=filters//2, out_channels=self.num_classes)
+            UnetOutBlock(spatial_dims=3, in_channels=filters//2, out_channels=out_channels)
         )
         
         if self.do_ds:
-            self.out2 = UnetOutBlock(spatial_dims=3, in_channels=filters, out_channels=self.num_classes)
-            self.out3 = UnetOutBlock(spatial_dims=3, in_channels=filters * 2, out_channels=self.num_classes)
+            self.out2 = UnetOutBlock(spatial_dims=3, in_channels=filters, out_channels=out_channels)
+            self.out3 = UnetOutBlock(spatial_dims=3, in_channels=filters * 2, out_channels=out_channels)
 
 
     def forward(self, input):
