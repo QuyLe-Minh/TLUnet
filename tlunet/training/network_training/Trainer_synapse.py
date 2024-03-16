@@ -106,7 +106,8 @@ class Trainer_synapse(NetworkTrainer_synapse):
         self.basic_generator_patch_size = self.data_aug_params = self.transpose_forward = self.transpose_backward = None
 
         self.batch_dice = batch_dice
-        self.loss = DC_and_CE_loss({'batch_dice': self.batch_dice, 'smooth': 1e-5, 'do_bg': False}, {}, square_dice = True)
+        self.loss = DC_and_CE_loss({'batch_dice': self.batch_dice, 'smooth': 1e-5, 'do_bg': False}, {})
+        self.loss.ce.weight = torch.tensor([1., 5.7157e+00, 9.7546e+00, 9.7854e+00, 2.1433e+03, 1.3232e+02, 2.0000e+00, 4.9694e+00, 2.1966e+01, 2.5293e+01, 4.2826e+01, 3.4858e+01, 4.5863e+02, 3.7790e+02]).cuda()
 
         self.online_eval_foreground_dc = []
         self.online_eval_tp = []
