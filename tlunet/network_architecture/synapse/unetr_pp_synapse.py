@@ -31,6 +31,10 @@ class TLUnet(SegmentationNetwork):
         self.deconv1 = DeconvBlock(filters * 4, n_deconv//2)
         self.deconv2 = DeconvBlock(filters * 2, n_deconv//4)
         self.deconv3 = DeconvBlock(filters, n_deconv//8)
+
+        self.weight = torch.tensor([1., 5.7157e+00, 9.7546e+00, 9.7854e+00, 2.1433e+03, 1.3232e+02, 1.0000e+00, 4.9694e+00, 2.1966e+01, 2.5293e+01, 4.2826e+01, 3.4858e+01, 4.5863e+02, 3.7790e+02])
+        self.weight = self.weight.reshape(1, self.weight.shape[0], 1, 1, 1)
+        self.weight = nn.Parameter(self.weight)
         
         self.head = nn.Sequential(
             ConvBlock(3, filters//2, filters//2),
@@ -67,5 +71,6 @@ class TLUnet(SegmentationNetwork):
             logits = (self.head(d3), self.out2(out2), self.out3(out3))
         else:
             logits = self.head(d3)
+            logits = logits * self.weight
         
         return logits
