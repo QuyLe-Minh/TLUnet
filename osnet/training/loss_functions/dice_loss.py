@@ -403,7 +403,7 @@ class DC_and_Focal_and_Adv_loss(nn.Module):
         else:
             self.dc = SoftDiceLossSquared(apply_nonlin=softmax_helper, **soft_dice_kwargs)
 
-    def forward(self, net_output, target, reconstruct, origin_img):
+    def forward(self, net_output, target, reconstruct=None, origin_img=None):
         """
         target must be b, c, x, y(, z) with c=1
         :param net_output:
@@ -432,10 +432,12 @@ class DC_and_Focal_and_Adv_loss(nn.Module):
         else:
             raise NotImplementedError("nah son") # reserved for other stuff (later)
         
-        adv_loss = 1 - (reconstruct - origin_img) ** 2
-        adv_loss = torch.where(adv_loss < 0.75, torch.zeros_like(adv_loss), adv_loss)
-        adv_loss = adv_loss.mean()
-        return result + adv_loss
+        adv_loss=0
+        if reconstruct is not None:
+            adv_loss = 1 - (reconstruct - origin_img) ** 2
+            adv_loss = torch.where(adv_loss < 0.75, torch.zeros_like(adv_loss), adv_loss)
+            adv_loss = adv_loss.mean()
+        return [result, adv_loss]
     
 class DC_and_CE_loss(nn.Module):
     def __init__(self, soft_dice_kwargs, ce_kwargs, aggregate="sum", square_dice=False, weight_ce=1, weight_dice=1,
