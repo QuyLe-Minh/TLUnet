@@ -35,7 +35,7 @@ from osnet.postprocessing.connected_components import determine_postprocessing
 from osnet.training.data_augmentation.default_data_augmentation import default_3D_augmentation_params, \
     default_2D_augmentation_params, get_default_augmentation, get_patch_size
 from osnet.training.dataloading.dataset_loading import load_dataset, DataLoader3D, DataLoader2D, unpack_dataset
-from osnet.training.loss_functions.dice_loss import DC_and_CE_loss, DC_and_Focal_loss
+from osnet.training.loss_functions.dice_loss import DC_and_Focal_and_Adv_loss, DC_and_Focal_loss
 from osnet.training.network_training.network_trainer_synapse import NetworkTrainer_synapse
 from osnet.utilities.nd_softmax import softmax_helper
 from osnet.utilities.tensor_utilities import sum_tensor
@@ -106,8 +106,9 @@ class Trainer_synapse(NetworkTrainer_synapse):
         self.basic_generator_patch_size = self.data_aug_params = self.transpose_forward = self.transpose_backward = None
 
         self.batch_dice = batch_dice
-        self.loss = DC_and_Focal_loss({'batch_dice': self.batch_dice, 'smooth': 1e-5, 'do_bg': False}, {})
-        # self.deloss = nn.MSELoss()
+        # self.loss = DC_and_Focal_loss({'batch_dice': self.batch_dice, 'smooth': 1e-5, 'do_bg': False}, {})
+        self.loss = DC_and_Focal_and_Adv_loss({'batch_dice': self.batch_dice, 'smooth': 1e-5, 'do_bg': False}, {})
+        self.deloss = nn.MSELoss()
 
         self.online_eval_foreground_dc = []
         self.online_eval_tp = []

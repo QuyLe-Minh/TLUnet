@@ -21,7 +21,7 @@ import torch
 from osnet.training.data_augmentation.data_augmentation_moreDA import get_moreDA_augmentation
 from osnet.training.loss_functions.deep_supervision import MultipleOutputLoss2
 from osnet.utilities.to_torch import maybe_to_torch, to_cuda
-from osnet.network_architecture.synapse.OSNet import OSNet
+from osnet.network_architecture.synapse.OSNet import Network_with_Adversarial
 from osnet.network_architecture.initialization import InitWeights_He
 from osnet.network_architecture.neural_network import SegmentationNetwork
 from osnet.training.data_augmentation.default_data_augmentation import default_2D_augmentation_params, \
@@ -99,7 +99,7 @@ class osnet_trainer_synapse(Trainer_synapse):
                 print(weights)
                 self.ds_loss_weights = weights
                 # now wrap the loss
-                self.loss = MultipleOutputLoss2(self.loss, self.ds_loss_weights)
+                self.loss = MultipleOutputLoss2(self.loss, self.ds_loss_weights, is_adv=True)
                 ################# END ###################
 
             self.folder_with_preprocessed_data = join(self.dataset_directory,
@@ -155,7 +155,7 @@ class osnet_trainer_synapse(Trainer_synapse):
         :return:
         """
 
-        self.network = OSNet(in_channels=self.input_channels, out_channels=self.num_classes, img_size=self.crop_size,dropout_rate=0.15, filters=self.filters, num_heads=self.num_heads, do_ds=self.deep_supervision)   
+        self.network = Network_with_Adversarial(in_channels=self.input_channels, out_channels=self.num_classes, img_size=self.crop_size,dropout_rate=0.15, filters=self.filters, num_heads=self.num_heads, do_ds=self.deep_supervision)   
         # self.applyWeight("output_synapse/unetr_pp/3d_fullres/Task002_Synapse/unetr_pp_trainer_synapse__unetr_pp_Plansv2.1/fold_0/model_best.model")     
 
         if torch.cuda.is_available():
@@ -173,10 +173,10 @@ class osnet_trainer_synapse(Trainer_synapse):
 
     def initialize_optimizer_and_scheduler(self):
         assert self.network is not None, "self.initialize_network must be called first"
-        self.optimizer = torch.optim.SGD(self.network.parameters(), self.initial_lr, weight_decay=self.weight_decay,
+        self.optimizer = torch.optim.SGD(self.network.segmentation_network.parameters(), self.initial_lr, weight_decay=self.weight_decay,
                                          momentum=0.99, nesterov=True)
-        # self.deloss_optimizer = torch.optim.SGD(self.network.reconstruct.parameters(), self.initial_lr, weight_decay=self.weight_decay,
-                                # momentum=0.99, nesterov=True)
+        self.deloss_optimizer = torch.optim.SGD(self.network.reconstructor.parameters(), self.initial_lr, weight_decay=self.weight_decay,
+                                momentum=0.99, nesterov=True)
         self.lr_scheduler = None
     
     def applyWeight(self, model_weight):
@@ -272,6 +272,7 @@ class osnet_trainer_synapse(Trainer_synapse):
             target = to_cuda(target)
 
         self.optimizer.zero_grad()
+        self.deloss_optimizer.zero_grad()
         
         if self.fp16:
             with autocast():
@@ -287,14 +288,32 @@ class osnet_trainer_synapse(Trainer_synapse):
                 self.amp_grad_scaler.step(self.optimizer)
                 self.amp_grad_scaler.update()
         else:
-            output = self.network(data)
+            rec, output = self.network(data, require_img=True)
+            rec_loss = self.deloss(rec, data)
             del data
             # print(output[2].shape, target[2].shape)
-            l = self.loss(output, target)
+            l, adv = self.loss(output, target)
+            loss = l+adv
 
             if do_backprop:
-                l.backward()
-                torch.nn.utils.clip_grad_norm_(self.network.parameters(), 12)
+                for param in self.network.reconstructor.parameters():
+                    param.requires_grad = False
+                    
+                loss.backward(retain_graph=True)
+                
+                for param in self.network.reconstructor.parameters():
+                    param.requires_grad = True
+                for param in self.network.segmentation_network.parameters():
+                    param.requires_grad = False
+                
+                rec_loss.backward()
+                
+                for param in self.network.segmentation_network.parameters():
+                    param.requires_grad = True
+            
+                torch.nn.utils.clip_grad_norm_(self.network.segmentation_network.parameters(), 12)
+                torch.nn.utils.clip_grad_norm_(self.network.reconstructor.parameters(), 12)
+                self.deloss_optimizer.step()
                 self.optimizer.step()
 
         if run_online_evaluation:
@@ -445,7 +464,7 @@ class osnet_trainer_synapse(Trainer_synapse):
         else:
             ep = epoch
         self.optimizer.param_groups[0]['lr'] = poly_lr(ep, self.max_num_epochs, self.initial_lr, 0.9)
-        # self.deloss_optimizer.param_groups[0]['lr'] = poly_lr(ep, self.max_num_epochs, self.initial_lr, 0.9)
+        self.deloss_optimizer.param_groups[0]['lr'] = poly_lr(ep, self.max_num_epochs, self.initial_lr, 0.9)
         self.print_to_log_file("lr:", np.round(self.optimizer.param_groups[0]['lr'], decimals=6))
 
     def on_epoch_end(self):
@@ -461,7 +480,7 @@ class osnet_trainer_synapse(Trainer_synapse):
         if self.epoch == 100:
             if self.all_val_eval_metrics[-1] == 0:
                 self.optimizer.param_groups[0]["momentum"] = 0.95
-                # self.deloss_optimizer.param_groups[0]["momentum"] = 0.95
+                self.deloss_optimizer.param_groups[0]["momentum"] = 0.95
                 self.network.apply(InitWeights_He(1e-2))
                 self.print_to_log_file("At epoch 100, the mean foreground Dice was 0. This can be caused by a too "
                                        "high momentum. High momentum (0.99) is good for datasets where it works, but "

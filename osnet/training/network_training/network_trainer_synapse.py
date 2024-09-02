@@ -74,7 +74,7 @@ class NetworkTrainer_synapse(object):
         ################# SET THESE IN self.initialize() ###################################
         self.network: Tuple[SegmentationNetwork, nn.DataParallel] = None
         self.optimizer = None
-        # self.deloss_optimizer = None
+        self.deloss_optimizer = None
         self.lr_scheduler = None
         self.tr_gen = self.val_gen = None
         self.was_initialized = False
@@ -83,7 +83,7 @@ class NetworkTrainer_synapse(object):
         self.output_folder = None
         self.fold = None
         self.loss = None
-        # self.deloss = None
+        self.deloss = None
         self.dataset_directory = None
 
         ################# SET THESE IN LOAD_DATASET OR DO_SPLIT ############################
@@ -296,8 +296,8 @@ class NetworkTrainer_synapse(object):
             #    lr_sched_state_dct[key] = lr_sched_state_dct[key]
         if save_optimizer:
             optimizer_state_dict = self.optimizer.state_dict()
-            # if self.deloss_optimizer:
-            #     deloss_optimizer_state_dict = self.deloss_optimizer.state_dict()
+            if self.deloss_optimizer:
+                deloss_optimizer_state_dict = self.deloss_optimizer.state_dict()
         else:
             optimizer_state_dict = None
 
@@ -306,7 +306,7 @@ class NetworkTrainer_synapse(object):
             'epoch': self.epoch + 1,
             'state_dict': state_dict,
             'optimizer_state_dict': optimizer_state_dict,
-            # 'deloss_optimizer_state_dict': deloss_optimizer_state_dict,
+            'deloss_optimizer_state_dict': deloss_optimizer_state_dict,
             'lr_scheduler_state_dict': lr_sched_state_dct,
             'plot_stuff': (self.all_tr_losses, self.all_val_losses, self.all_val_losses_tr_mode,
                            self.all_val_eval_metrics),
@@ -396,13 +396,13 @@ class NetworkTrainer_synapse(object):
         self.epoch = checkpoint['epoch']
         if train:
             optimizer_state_dict = checkpoint['optimizer_state_dict']
-            # deloss_optimizer_state_dict = checkpoint['deloss_optimizer_state_dict']
+            deloss_optimizer_state_dict = checkpoint['deloss_optimizer_state_dict']
             self.optimizer.param_groups[0]["lr"] = optimizer_state_dict["param_groups"][0]["lr"]
-            # self.deloss_optimizer.param_groups[0]["lr"] = deloss_optimizer_state_dict["param_groups"][0]["lr"]
+            self.deloss_optimizer.param_groups[0]["lr"] = deloss_optimizer_state_dict["param_groups"][0]["lr"]
 
             if optimizer_state_dict is not None:
                 self.optimizer.load_state_dict(optimizer_state_dict)
-                # self.deloss_optimizer.load_state_dict(deloss_optimizer_state_dict)
+                self.deloss_optimizer.load_state_dict(deloss_optimizer_state_dict)
 
             if self.lr_scheduler is not None and hasattr(self.lr_scheduler, 'load_state_dict') and checkpoint[
                 'lr_scheduler_state_dict'] is not None:
