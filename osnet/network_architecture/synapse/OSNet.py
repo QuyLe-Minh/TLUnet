@@ -3,7 +3,7 @@ from torch import nn
 from typing import Tuple, Union
 from osnet.network_architecture.neural_network import SegmentationNetwork
 from osnet.network_architecture.dynunet_block import UnetResBlock, UnetOutBlock
-from osnet.network_architecture.synapse.model_components import Encoder, OSNUpBlock, OSBlock, Reconstructor
+from osnet.network_architecture.synapse.model_components import Encoder, OSNUpBlock, OSBlock, Reconstructor, OSBlockwithDilation
 
 
 class OSNet(nn.Module):
@@ -29,12 +29,12 @@ class OSNet(nn.Module):
         self.num_classes = out_channels
 
         self.encoder = Encoder(in_channels, dims, depths)
-        self.feature_extract = OSBlock(in_channels=in_channels, out_channels=hidden_size)
+        self.feature_extract = OSBlockwithDilation(in_channels=in_channels, out_channels=hidden_size)
         
-        self.decoder5 = OSNUpBlock(in_channels=hidden_size*16, out_channels=hidden_size*8, upsample_kernel_size=2, transformer=True)
+        self.decoder5 = OSNUpBlock(in_channels=hidden_size*16, out_channels=hidden_size*8, upsample_kernel_size=2)
         self.decoder4 = OSNUpBlock(in_channels=hidden_size*8, out_channels=hidden_size*4, upsample_kernel_size=2)
-        self.decoder3 = OSNUpBlock(in_channels=hidden_size*4, out_channels=hidden_size*2, upsample_kernel_size=2)
-        self.decoder2 = OSNUpBlock(in_channels=hidden_size*2, out_channels=hidden_size, upsample_kernel_size=(2,4,4), depth=1)
+        self.decoder3 = OSNUpBlock(in_channels=hidden_size*4, out_channels=hidden_size*2, upsample_kernel_size=2, dilation=True)
+        self.decoder2 = OSNUpBlock(in_channels=hidden_size*2, out_channels=hidden_size, upsample_kernel_size=(2,4,4), depth=1, dilation=True)
 
         self.out1 = nn.Conv3d(hidden_size, out_channels, kernel_size=1)
         if self.do_ds:

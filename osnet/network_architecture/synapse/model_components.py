@@ -4,7 +4,6 @@ from monai.utils import optional_import
 from osnet.network_architecture.dynunet_block import UnetResBlock, LightConv3x3, LightConv3x3withDilation, ChannelGate, Conv1x1, Conv1x1Linear
 from osnet.network_architecture.synapse.transformerblock import TransformerBlock
 from monai.networks.layers.utils import get_act_layer, get_norm_layer
-import torch
 
 einops, _ = optional_import("einops")
 
@@ -47,14 +46,10 @@ class OSBlock(nn.Module):
     def forward(self, x):
         identity = x
         x1 = self.conv1(x)
-        x2a = self.forward_features(self.conv2a, x1)
-        x2b = self.forward_features(self.conv2b, x1)
-        x2c = self.forward_features(self.conv2c, x1)
-        x2d = self.forward_features(self.conv2d, x1)
-        # x2a = self.conv2a(x1)
-        # x2b = self.conv2b(x1)
-        # x2c = self.conv2c(x1)
-        # x2d = self.conv2d(x1)
+        x2a = self.conv2a(x1)
+        x2b = self.conv2b(x1)
+        x2c = self.conv2c(x1)
+        x2d = self.conv2d(x1)
         x2 = self.gate(x2a) + self.gate(x2b) + self.gate(x2c) + self.gate(x2d)
         x3 = self.conv3(x2)
         if self.downsample is not None:
@@ -69,20 +64,20 @@ class OSBlockwithDilation(nn.Module):
         super(OSBlockwithDilation, self).__init__()
         mid_channels = out_channels // bottleneck_reduction
         self.conv1 = Conv1x1(in_channels, mid_channels)
-        self.conv2a = LightConv3x3withDilation(mid_channels, mid_channels)
+        self.conv2a = LightConv3x3(mid_channels, mid_channels)
         self.conv2b = nn.Sequential(
-            LightConv3x3withDilation(mid_channels, mid_channels),
-            LightConv3x3withDilation(mid_channels, mid_channels),
+            LightConv3x3(mid_channels, mid_channels),
+            LightConv3x3(mid_channels, mid_channels),
         )
         self.conv2c = nn.Sequential(
-            LightConv3x3withDilation(mid_channels, mid_channels),
-            LightConv3x3withDilation(mid_channels, mid_channels),
+            LightConv3x3(mid_channels, mid_channels),
+            LightConv3x3(mid_channels, mid_channels),
             LightConv3x3withDilation(mid_channels, mid_channels),
         )
         self.conv2d = nn.Sequential(
-            LightConv3x3withDilation(mid_channels, mid_channels),
-            LightConv3x3withDilation(mid_channels, mid_channels),
-            LightConv3x3withDilation(mid_channels, mid_channels),
+            LightConv3x3(mid_channels, mid_channels),
+            LightConv3x3(mid_channels, mid_channels),
+            LightConv3x3(mid_channels, mid_channels),
             LightConv3x3withDilation(mid_channels, mid_channels),
         )
         self.gate = ChannelGate(mid_channels)
@@ -177,8 +172,10 @@ class Encoder(nn.Module):
         for i in range(4):
             stage_blocks = []
             for _ in range(depths[i]):
-                if i >= 2:
-                    stage_blocks.append(TransformerBlock(input_size=input_size[i-2], hidden_size=dims[i], proj_size=proj_size[i-2], num_heads=4, dropout_rate=0.15, pos_embed=True))
+                # if i >= 2:
+                #     stage_blocks.append(TransformerBlock(input_size=input_size[i-2], hidden_size=dims[i], proj_size=proj_size[i-2], num_heads=4, dropout_rate=0.15, pos_embed=True))
+                if i < 2:
+                    stage_blocks.append(OSBlockwithDilation(dims[i], dims[i]))
                 else:
                     stage_blocks.append(OSBlock(dims[i], dims[i]))
             self.stages.append(nn.Sequential(*stage_blocks))
@@ -209,7 +206,7 @@ class Encoder(nn.Module):
         return x, hidden_states
     
 class OSNUpBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, upsample_kernel_size, depth = 2, transformer=False, **kwargs):
+    def __init__(self, in_channels, out_channels, upsample_kernel_size, depth = 2, dilation=False, **kwargs):
         super(OSNUpBlock, self).__init__()
         
         upsample_stride = upsample_kernel_size
@@ -217,8 +214,10 @@ class OSNUpBlock(nn.Module):
         self.decode_layers = nn.ModuleList()
         
         for _ in range(depth):
-            if transformer:
-                self.decode_layers.append(TransformerBlock(input_size=64, hidden_size=out_channels, proj_size=64, num_heads=4, dropout_rate=0.15, pos_embed=True))
+            # if transformer:
+            #     self.decode_layers.append(TransformerBlock(input_size=64, hidden_size=out_channels, proj_size=64, num_heads=4, dropout_rate=0.15, pos_embed=True))
+            if dilation:
+                self.decode_layers.append(OSBlockwithDilation(out_channels, out_channels))
             else:
                 self.decode_layers.append(OSBlock(out_channels, out_channels))
             
