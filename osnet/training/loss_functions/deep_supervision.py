@@ -36,16 +36,18 @@ class MultipleOutputLoss2(nn.Module):
             weights = [1] * len(x)
         else:
             weights = self.weight_factors
-            
+        
+        adv_loss = 0
         if not self.is_adv:
             l = weights[0] * self.loss(x[0], y[0])
         else:
-            l = weights[0] * self.loss(x[0], y[0], reconstruct, origin_img)
+            loss, adv_loss = self.loss(x[0], y[0], reconstruct, origin_img)
+            l = weights[0] * loss
         for i in range(1, len(x)):
             if weights[i] != 0:
                 if not self.is_adv: 
                     coarse = self.loss(x[i], y[i])
                 else:
-                    coarse = self.loss(x[i], y[i], reconstruct, origin_img)
+                    coarse = self.loss(x[i], y[i], reconstruct, origin_img)[0]
                 l += weights[i] * coarse
-        return l
+        return [l, adv_loss]
