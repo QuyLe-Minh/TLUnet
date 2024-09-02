@@ -1,6 +1,4 @@
-import torch
 from torch import nn
-from typing import Tuple, Union
 from osnet.network_architecture.neural_network import SegmentationNetwork
 from osnet.network_architecture.dynunet_block import UnetResBlock, UnetOutBlock
 from osnet.network_architecture.synapse.model_components import Encoder, OSNUpBlock, OSBlock, Reconstructor, OSBlockwithDilation
@@ -43,7 +41,7 @@ class OSNet(nn.Module):
 
 
     
-    def forward(self, inp, require_img=False):
+    def forward(self, inp):
         x_output, hidden_states = self.encoder(inp)
         convBlock = self.feature_extract(inp)
 
@@ -78,10 +76,15 @@ class Network_with_Adversarial(SegmentationNetwork):
         super().__init__()
         self.segmentation_network = OSNet(in_channels, out_channels, hidden_size, img_size, depths, dims, do_ds)
         self.reconstructor = Reconstructor(in_channels)
+        self.do_ds = do_ds
 
     def forward(self, inp, require_img=False):
         dec4, logits = self.segmentation_network(inp)
         if require_img:
             return self.reconstructor(dec4), logits
-        else: return logits
+        else:
+            if not self.do_ds:
+                return logits[0]
+            else:
+                return logits
 
