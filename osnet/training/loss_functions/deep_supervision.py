@@ -17,7 +17,7 @@ from torch import nn
 
 
 class MultipleOutputLoss2(nn.Module):
-    def __init__(self, loss, weight_factors=None):
+    def __init__(self, loss, weight_factors=None, is_adv=False):
         """
         use this if you have several outputs and ground truth (both list of same len) and the loss should be computed
         between them (x[0] and y[0], x[1] and y[1] etc)
@@ -27,6 +27,7 @@ class MultipleOutputLoss2(nn.Module):
         super(MultipleOutputLoss2, self).__init__()
         self.weight_factors = weight_factors
         self.loss = loss
+        self.is_adv = is_adv
 
     def forward(self, x, y, reconstruct = None, origin_img = None):
         assert isinstance(x, (tuple, list)), "x must be either tuple or list"
@@ -35,16 +36,16 @@ class MultipleOutputLoss2(nn.Module):
             weights = [1] * len(x)
         else:
             weights = self.weight_factors
-
-        try:
+            
+        if not self.is_adv:
             l = weights[0] * self.loss(x[0], y[0])
-        except:
+        else:
             l = weights[0] * self.loss(x[0], y[0], reconstruct, origin_img)
         for i in range(1, len(x)):
             if weights[i] != 0:
-                try: 
+                if not self.is_adv: 
                     coarse = self.loss(x[i], y[i])
-                except:
+                else:
                     coarse = self.loss(x[i], y[i], reconstruct, origin_img)
                 l += weights[i] * coarse
         return l
