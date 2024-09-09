@@ -35,7 +35,7 @@ from osnet.postprocessing.connected_components import determine_postprocessing
 from osnet.training.data_augmentation.default_data_augmentation import default_3D_augmentation_params, \
     default_2D_augmentation_params, get_default_augmentation, get_patch_size
 from osnet.training.dataloading.dataset_loading import load_dataset, DataLoader3D, DataLoader2D, unpack_dataset
-from osnet.training.loss_functions.dice_loss import DC_and_Focal_and_Adv_loss, DC_and_Focal_loss
+from osnet.training.loss_functions.dice_loss import DC_and_Focal_and_Adv_loss, DC_and_CE_and_Adv_loss
 from osnet.training.network_training.network_trainer_synapse import NetworkTrainer_synapse
 from osnet.utilities.nd_softmax import softmax_helper
 from osnet.utilities.tensor_utilities import sum_tensor
@@ -126,7 +126,7 @@ class Trainer_synapse(NetworkTrainer_synapse):
 
         self.lr_scheduler_eps = 1e-3
         self.lr_scheduler_patience = 30
-        self.initial_lr = 3e-4
+        self.initial_lr = 1e-2
         self.weight_decay = 3e-5
 
         self.oversample_foreground_percent = 0.33
@@ -656,6 +656,8 @@ class Trainer_synapse(NetworkTrainer_synapse):
                              json_name=job_name + " val tiled %s" % (str(use_sliding_window)),
                              json_author="Fabian",
                              json_task=task, num_threads=default_num_threads)
+        
+        # self.benchmark.extend([])
 
         if run_postprocessing_on_folds:
             # in the old unetr_pp we would stop here. Now we add a postprocessing. This postprocessing can remove everything

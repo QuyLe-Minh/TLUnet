@@ -77,6 +77,7 @@ class Network_with_Adversarial(SegmentationNetwork):
         self.segmentation_network = OSNet(in_channels, out_channels, hidden_size, img_size, depths, dims, do_ds)
         self.reconstructor = Reconstructor(in_channels)
         self.do_ds = do_ds
+        self.num_classes = out_channels
 
     def forward(self, inp, require_img=False):
         dec4, logits = self.segmentation_network(inp)

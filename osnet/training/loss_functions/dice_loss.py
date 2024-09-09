@@ -20,6 +20,7 @@ from osnet.utilities.nd_softmax import softmax_helper
 from osnet.utilities.tensor_utilities import sum_tensor
 from monai.losses import FocalLoss
 from torch import nn
+from torch.nn import functional as F
 import numpy as np
 
 
@@ -305,6 +306,18 @@ class SoftDiceLossSquared(nn.Module):
         dc = dc.mean()
 
         return -dc
+    
+class PolyFocalLoss(nn.Module):
+    def __init__(self, to_onehot_y=True, use_softmax=False, epsilon=1., gamma=2, **kwargs):
+        super(PolyFocalLoss, self).__init__()
+        self.focal = FocalLoss(to_onehot_y=to_onehot_y, use_softmax=use_softmax, gamma=gamma)
+        self.epsilon = epsilon
+        self.gamma = gamma
+        
+    def forward(self, net_output, target):
+        pt = F.softmax(net_output, dim=1)
+        focal = self.focal(pt, target)
+        return focal + self.epsilon * ((1-pt)**(self.gamma+1))
 
 class DC_and_Focal_loss(nn.Module):
     def __init__(self, soft_dice_kwargs, ce_kwargs, aggregate="sum", square_dice=False, weight_ce=1, weight_dice=1,
@@ -326,8 +339,8 @@ class DC_and_Focal_loss(nn.Module):
         self.weight_dice = weight_dice
         self.weight_ce = weight_ce
         self.aggregate = aggregate
-        self.focal = FocalLoss(to_onehot_y=True, 
-                               use_softmax=True, 
+        self.focal = PolyFocalLoss(to_onehot_y=True, 
+                               use_softmax=False, 
                                )
                             #    weight=torch.tensor([1.04705774e+00, 2.06541758e+02, 4.22427505e+02, 4.18862343e+02,
                             #                                     2.47212595e+03, 4.33402164e+03, 3.91968337e+01, 1.50792414e+02,
@@ -392,7 +405,7 @@ class DC_and_Focal_and_Adv_loss(nn.Module):
         self.weight_dice = weight_dice
         self.weight_ce = weight_ce
         self.aggregate = aggregate
-        self.focal = FocalLoss(to_onehot_y=True, 
+        self.focal = PolyFocalLoss(to_onehot_y=True, 
                                use_softmax=True, 
                                )
 
@@ -434,8 +447,8 @@ class DC_and_Focal_and_Adv_loss(nn.Module):
         
         adv_loss=0
         if reconstruct is not None:
-            adv_loss = 1 - (reconstruct - origin_img) ** 2
-            adv_loss = torch.where(adv_loss < 0.75, torch.zeros_like(adv_loss), adv_loss)
+            adv_loss = -(reconstruct - origin_img) ** 2
+            adv_loss = torch.where(adv_loss < -10, torch.zeros_like(adv_loss), adv_loss)
             adv_loss = adv_loss.mean()
         return [result, adv_loss]
     
@@ -499,6 +512,71 @@ class DC_and_CE_loss(nn.Module):
             raise NotImplementedError("nah son") # reserved for other stuff (later)
         return result
 
+class DC_and_CE_and_Adv_loss(nn.Module):
+    def __init__(self, soft_dice_kwargs, ce_kwargs, aggregate="sum", square_dice=False, weight_ce=1, weight_dice=1,
+                 log_dice=False, ignore_label=None, weight = None):
+        """
+        CAREFUL. Weights for CE and Dice do not need to sum to one. You can set whatever you want.
+        :param soft_dice_kwargs:
+        :param ce_kwargs:
+        :param aggregate:
+        :param square_dice:
+        :param weight_ce:
+        :param weight_dice:
+        """
+        super(DC_and_CE_and_Adv_loss, self).__init__()
+        if ignore_label is not None:
+            assert not square_dice, 'not implemented'
+            ce_kwargs['reduction'] = 'none'
+        self.log_dice = log_dice
+        self.weight_dice = weight_dice
+        self.weight_ce = weight_ce
+        self.aggregate = aggregate
+        self.ce = RobustCrossEntropyLoss(**ce_kwargs)
+        self.weight = weight
+
+        self.ignore_label = ignore_label
+
+        if not square_dice:
+            self.dc = SoftDiceLoss(weight = self.weight, apply_nonlin=softmax_helper, **soft_dice_kwargs)
+        else:
+            self.dc = SoftDiceLossSquared(apply_nonlin=softmax_helper, **soft_dice_kwargs)
+
+    def forward(self, net_output, target, reconstruct=None, origin_img=None):
+        """
+        target must be b, c, x, y(, z) with c=1
+        :param net_output:
+        :param target:
+        :return:
+        """
+        if self.ignore_label is not None:
+            assert target.shape[1] == 1, 'not implemented for one hot encoding'
+            mask = target != self.ignore_label
+            target[~mask] = 0
+            mask = mask.float()
+        else:
+            mask = None
+
+        dc_loss = self.dc(net_output, target, loss_mask=mask) if self.weight_dice != 0 else 0
+        if self.log_dice:
+            dc_loss = -torch.log(-dc_loss)
+
+        ce_loss = self.ce(net_output, target[:, 0].long()) if self.weight_ce != 0 else 0
+        if self.ignore_label is not None:
+            ce_loss *= mask[:, 0]
+            ce_loss = ce_loss.sum() / mask.sum()
+
+        if self.aggregate == "sum":
+            result = self.weight_ce * ce_loss + self.weight_dice * dc_loss
+        else:
+            raise NotImplementedError("nah son") # reserved for other stuff (later)
+        
+        adv_loss=0
+        if reconstruct is not None:
+            adv_loss = -(reconstruct - origin_img) ** 2
+            adv_loss = torch.where(adv_loss < -11, torch.zeros_like(adv_loss), adv_loss)
+            adv_loss = adv_loss.mean()
+        return [result, adv_loss]
 
 class DC_and_BCE_loss(nn.Module):
     def __init__(self, bce_kwargs, soft_dice_kwargs, aggregate="sum"):
