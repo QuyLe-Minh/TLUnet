@@ -308,7 +308,7 @@ class SoftDiceLossSquared(nn.Module):
         return -dc
     
 class PolyFocalLoss(nn.Module):
-    def __init__(self, to_onehot_y=True, use_softmax=False, epsilon=1., gamma=2, **kwargs):
+    def __init__(self, to_onehot_y=True, use_softmax=False, epsilon=-1., gamma=2, **kwargs):
         super(PolyFocalLoss, self).__init__()
         self.focal = FocalLoss(to_onehot_y=to_onehot_y, use_softmax=use_softmax, gamma=gamma)
         self.epsilon = epsilon
