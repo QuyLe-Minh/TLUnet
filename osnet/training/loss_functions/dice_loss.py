@@ -406,7 +406,7 @@ class DC_and_Focal_and_Adv_loss(nn.Module):
         self.weight_ce = weight_ce
         self.aggregate = aggregate
         self.focal = PolyFocalLoss(to_onehot_y=True, 
-                               use_softmax=True, 
+                               use_softmax=False, 
                                )
 
         self.ignore_label = ignore_label
