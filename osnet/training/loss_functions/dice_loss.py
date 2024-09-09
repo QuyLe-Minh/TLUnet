@@ -310,14 +310,15 @@ class SoftDiceLossSquared(nn.Module):
 class PolyFocalLoss(nn.Module):
     def __init__(self, to_onehot_y=True, use_softmax=False, epsilon=-1., gamma=2, **kwargs):
         super(PolyFocalLoss, self).__init__()
-        self.focal = FocalLoss(to_onehot_y=to_onehot_y, use_softmax=use_softmax, gamma=gamma)
+        self.focal = FocalLoss(to_onehot_y=to_onehot_y, use_softmax=use_softmax, gamma=gamma, reduction='none')
         self.epsilon = epsilon
         self.gamma = gamma
         
     def forward(self, net_output, target):
         pt = F.softmax(net_output, dim=1)
         focal = self.focal(pt, target)
-        return focal + self.epsilon * ((1-pt)**(self.gamma+1))
+        poly = focal + self.epsilon * ((1-pt)**(self.gamma+1))
+        return poly.mean()
 
 class DC_and_Focal_loss(nn.Module):
     def __init__(self, soft_dice_kwargs, ce_kwargs, aggregate="sum", square_dice=False, weight_ce=1, weight_dice=1,
