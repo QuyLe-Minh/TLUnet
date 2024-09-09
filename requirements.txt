@@ -4,7 +4,7 @@ batchgenerators==0.21
 matplotlib==3.5.1
 typing==3.7.4.3
 sklearn==0.0
-scikit-learn==1.0.2
+scikit-learn==1.5.0
 tqdm==4.32.1
 fvcore==0.1.5.post20220414
 scikit-image==0.18.1
