@@ -8,6 +8,62 @@ import torch
 
 einops, _ = optional_import("einops")
 
+class PosEnc(nn.Module):
+    def __init__(self, out_channels, width=256, depth=8, L_embed=4):
+        super(PosEnc, self).__init__()
+        self.width = width
+        self.depth = depth
+        self.L_embed = L_embed
+        
+        self.layers = nn.ModuleList()
+        self.dim = 3*2*L_embed + 1
+        for i in range(depth):
+            if i==depth-1:
+                self.layers.append(self.dense(width, out_channels))
+            else:
+                self.layers.append(self.dense(self.dim, width, nn.ReLU))
+                self.dim = width
+        
+    def dense(self, in_dim, out_dim, act=None):
+        return nn.Sequential(
+            nn.Linear(in_dim, out_dim),
+            None if act is None else act()
+        )
+        
+    def embedding(self, inp):
+        res = [inp]
+        for l in range(self.L_embed):
+            res.append(torch.sin(2**l * inp))
+            res.append(torch.cos(2**l * inp))
+        return torch.cat(res, dim=-1)
+    
+    def forward(self, pos, inp_shape):
+        B = pos.shape[0]
+        _, _, d, h, w = inp_shape
+        
+        mesh_grids = []
+        
+        for i in range(B):
+            x_lb, x_ub, y_lb, y_ub, z_lb, z_ub = pos[i]
+            x = torch.linspace(x_lb, x_ub, d)
+            y = torch.linspace(y_lb, y_ub, h)
+            z = torch.linspace(z_lb, z_ub, w)
+            
+            X, Y, Z = torch.meshgrid(x, y, z, indexing='ij')
+            grid = torch.stack([X, Y, Z], dim=-1)
+            
+            mesh_grids.append(grid)
+        
+        mesh_grids = torch.stack(mesh_grids, dim=0)
+        mesh_grids = torch.reshape(mesh_grids, (B, -1, 3))
+        
+        mesh_grids = self.embedding(mesh_grids)
+        for i, layer in enumerate(self.layers):
+            mesh_grids = layer(mesh_grids)
+            
+        mesh_grids = mesh_grids.reshape(B, d, h, w, -1).permute(0, 4, 1, 2, 3)
+        return mesh_grids    
+
 class OSBlock(nn.Module):
     """Omni-scale feature learning block."""
     
@@ -47,14 +103,10 @@ class OSBlock(nn.Module):
     def forward(self, x):
         identity = x
         x1 = self.conv1(x)
-        x2a = self.forward_features(self.conv2a, x1)
-        x2b = self.forward_features(self.conv2b, x1)
-        x2c = self.forward_features(self.conv2c, x1)
-        x2d = self.forward_features(self.conv2d, x1)
-        # x2a = self.conv2a(x1)
-        # x2b = self.conv2b(x1)
-        # x2c = self.conv2c(x1)
-        # x2d = self.conv2d(x1)
+        x2a = self.conv2a(x1)
+        x2b = self.conv2b(x1)
+        x2c = self.conv2c(x1)
+        x2d = self.conv2d(x1)
         x2 = self.gate(x2a) + self.gate(x2b) + self.gate(x2c) + self.gate(x2d)
         x3 = self.conv3(x2)
         if self.downsample is not None:
@@ -101,10 +153,6 @@ class OSBlockwithDilation(nn.Module):
     def forward(self, x):
         identity = x
         x1 = self.conv1(x)
-        # x2a = self.forward_features(self.conv2a, x1)
-        # x2b = self.forward_features(self.conv2b, x1)
-        # x2c = self.forward_features(self.conv2c, x1)
-        # x2d = self.forward_features(self.conv2d, x1)
         x2a = self.conv2a(x1)
         x2b = self.conv2b(x1)
         x2c = self.conv2c(x1)

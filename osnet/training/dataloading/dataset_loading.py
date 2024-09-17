@@ -224,6 +224,7 @@ class DataLoader3D(SlimDataLoaderBase):
         selected_keys = np.random.choice(self.list_of_keys, self.batch_size, True, None)
         data = np.zeros(self.data_shape, dtype=np.float32)
         seg = np.zeros(self.seg_shape, dtype=np.float32)
+        pos = np.zeros((self.data_shape[0], 6), dtype=np.float32)
         case_properties = []
         for j, i in enumerate(selected_keys):
             # oversampling foreground will improve stability of model training, especially if many patches are empty
@@ -342,6 +343,9 @@ class DataLoader3D(SlimDataLoaderBase):
             valid_bbox_y_ub = min(shape[1], bbox_y_ub)
             valid_bbox_z_lb = max(0, bbox_z_lb)
             valid_bbox_z_ub = min(shape[2], bbox_z_ub)
+            
+            _, d, h, w = case_all_data.shape
+            pos[j] = np.array([valid_bbox_x_lb/d, valid_bbox_x_ub/d, valid_bbox_y_lb/h, valid_bbox_y_ub/h, valid_bbox_z_lb/w, valid_bbox_z_ub/w])
 
             # At this point you might ask yourself why we would treat seg differently from seg_from_previous_stage.
             # Why not just concatenate them here and forget about the if statements? Well that's because segneeds to
@@ -376,7 +380,7 @@ class DataLoader3D(SlimDataLoaderBase):
                                                               max(bbox_z_ub - shape[2], 0))),
                                    'constant', **{'constant_values': 0})
 
-        return {'data': data, 'seg': seg, 'properties': case_properties, 'keys': selected_keys}
+        return {'data': data, 'seg': seg, 'properties': case_properties, 'keys': selected_keys, 'pos': pos}
 
 
 class DataLoader2D(SlimDataLoaderBase):
