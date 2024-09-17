@@ -231,3 +231,9 @@ class OSNUpBlock(nn.Module):
         # print(out.shape)
         return out
     
+class PosEnc(nn.Module):
+    def __init__(self, in_channels, input_size, proj_size, **kwargs):
+        super(PosEnc, self).__init__()
+        self.input_size = input_size
+        self.proj_size = proj_size
+        self.pos_embed = nn.Parameter(torch.randn(input_size, proj_size))

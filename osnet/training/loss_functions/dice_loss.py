@@ -18,6 +18,7 @@ from osnet.training.loss_functions.TopK_loss import TopKLoss
 from osnet.training.loss_functions.crossentropy import RobustCrossEntropyLoss
 from osnet.utilities.nd_softmax import softmax_helper
 from osnet.utilities.tensor_utilities import sum_tensor
+from monai.networks import one_hot
 from monai.losses import FocalLoss
 from torch import nn
 from torch.nn import functional as F
@@ -308,16 +309,20 @@ class SoftDiceLossSquared(nn.Module):
         return -dc
     
 class PolyFocalLoss(nn.Module):
-    def __init__(self, to_onehot_y=True, use_softmax=False, epsilon=-1., gamma=2, **kwargs):
+    def __init__(self, to_onehot_y=False, use_softmax=True, epsilon=-1., gamma=1.5, alpha=0.3, **kwargs):
         super(PolyFocalLoss, self).__init__()
-        self.focal = FocalLoss(to_onehot_y=to_onehot_y, use_softmax=use_softmax, gamma=gamma, reduction='none')
+        self.focal = FocalLoss(to_onehot_y=to_onehot_y, use_softmax=use_softmax, gamma=gamma, alpha=alpha, reduction='none')
         self.epsilon = epsilon
         self.gamma = gamma
+        self.alpha = alpha
         
     def forward(self, net_output, target):
         pt = F.softmax(net_output, dim=1)
-        focal = self.focal(pt, target)
-        poly = focal + self.epsilon * ((1-pt)**(self.gamma+1))
+        labels = one_hot(target, num_classes=net_output.shape[1])
+        
+        focal = self.focal(net_output, labels)
+        weight = labels * self.alpha + (1 - labels) * (1 - self.alpha)
+        poly = focal + self.epsilon * ((1-pt)**(self.gamma+1)) * weight
         return poly.mean()
 
 class DC_and_Focal_loss(nn.Module):
@@ -340,8 +345,8 @@ class DC_and_Focal_loss(nn.Module):
         self.weight_dice = weight_dice
         self.weight_ce = weight_ce
         self.aggregate = aggregate
-        self.focal = PolyFocalLoss(to_onehot_y=True, 
-                               use_softmax=False, 
+        self.focal = PolyFocalLoss(to_onehot_y=False, 
+                               use_softmax=True, 
                                )
                             #    weight=torch.tensor([1.04705774e+00, 2.06541758e+02, 4.22427505e+02, 4.18862343e+02,
                             #                                     2.47212595e+03, 4.33402164e+03, 3.91968337e+01, 1.50792414e+02,
@@ -406,8 +411,8 @@ class DC_and_Focal_and_Adv_loss(nn.Module):
         self.weight_dice = weight_dice
         self.weight_ce = weight_ce
         self.aggregate = aggregate
-        self.focal = PolyFocalLoss(to_onehot_y=True, 
-                               use_softmax=False, 
+        self.focal = PolyFocalLoss(to_onehot_y=False, 
+                               use_softmax=True, 
                                )
 
         self.ignore_label = ignore_label

@@ -7,7 +7,7 @@ import matplotlib
 #                            6.96975320e+02, 7.46346381e+02, 1.89924740e+03, 8.06596604e+02,
 #                            1.58894967e+04, 1.27544505e+04])))
 # checkpoint = torch.load("C:/Users/Admin/Downloads/Synapse_ckpt/Synapse_ckpt/model_final_checkpoint.model", map_location='cpu')
-checkpoint = torch.load("C:/Users/Admin/Downloads/model_ep_200.model", map_location='cpu')
+checkpoint = torch.load("C:/Users/Admin/Downloads/model_latest (1).model", map_location='cpu')
 all_tr_losses, all_val_losses, all_val_losses_tr_mode, all_val_eval_metrics = checkpoint['plot_stuff']
 epoch = checkpoint['epoch']-1
 
@@ -45,4 +45,5 @@ def plot_progress():
     
 # plot_progress()
 # print(all_val_eval_metrics[100:120])
+print(checkpoint['epoch'])
 print(all_val_eval_metrics[-20:])

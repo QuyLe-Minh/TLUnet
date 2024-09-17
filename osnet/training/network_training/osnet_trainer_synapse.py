@@ -178,7 +178,7 @@ class osnet_trainer_synapse(Trainer_synapse):
         assert self.network is not None, "self.initialize_network must be called first"
         self.optimizer = torch.optim.SGD(self.network.segmentation_network.parameters(), self.initial_lr, weight_decay=self.weight_decay,
                                          momentum=0.99, nesterov=True)
-        self.deloss_optimizer = torch.optim.SGD(self.network.reconstructor.parameters(), self.initial_lr/10., weight_decay=self.weight_decay,
+        self.deloss_optimizer = torch.optim.SGD(self.network.reconstructor.parameters(), self.initial_lr, weight_decay=self.weight_decay,
                                 momentum=0.99, nesterov=True)
         self.lr_scheduler = None
     
