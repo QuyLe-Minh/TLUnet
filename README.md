@@ -1,7 +1,8 @@
 # TLUnet: Efficient and Accurate 3D Medical Image Segmentation
 
-## Architecture overview of UNETR++
-![Architecture overview](https://github.com/QuyLe-Minh/TLUnet/assets/92782164/0412fc09-3052-4d31-b6f2-0bded3e50645)
+## Architecture overview of OSNet
+![Architecture overview](https://github.com/user-attachments/assets/4cd5ddc8-9fee-4053-8a9f-46580d3475e3)
+
 
 
 <hr />
