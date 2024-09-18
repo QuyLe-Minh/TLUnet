@@ -170,6 +170,32 @@ class osnet_trainer_synapse(Trainer_synapse):
         model_flops = flops.total()
         print(f"Total trainable parameters: {round(n_parameters * 1e-6, 2)} M")
         print(f"MAdds: {round(model_flops * 1e-9, 2)} G")
+        
+        self.load_pretrain("alo.pth")
+    
+    def load_pretrain(self, path):
+        checkpoint = torch.load(path, map_location='cpu')
+        new_state_dict = OrderedDict()
+        curr_state_dict_keys = list(self.network.state_dict().keys())
+
+        # if state dict comes form nn.DataParallel but we use non-parallel model here then the state dict keys do not
+        # match. Use heuristic to make it match
+        for k, value in checkpoint['state_dict'].items():
+            key = k
+            if key not in curr_state_dict_keys and key.startswith('module.'):
+                key = key[7:]
+                print("HEYYYYYYYYYYYY")
+            new_state_dict[key] = value
+        
+        for key, value in self.network.state_dict().items():
+            if key not in new_state_dict:
+                new_state_dict[key] = value
+                print("New KEY:", key)
+        
+        self.network.load_state_dict(new_state_dict)
+                
+        
+        
 
     def initialize_optimizer_and_scheduler(self):
         assert self.network is not None, "self.initialize_network must be called first"
@@ -263,13 +289,16 @@ class osnet_trainer_synapse(Trainer_synapse):
         data_dict = next(data_generator)
         data = data_dict['data']
         target = data_dict['target']
+        pos = data_dict['pos']
 
         data = maybe_to_torch(data)
         target = maybe_to_torch(target)
+        pos = maybe_to_torch(pos)
 
         if torch.cuda.is_available():
             data = to_cuda(data)
             target = to_cuda(target)
+            pos = to_cuda(pos)
 
         self.optimizer.zero_grad()
         

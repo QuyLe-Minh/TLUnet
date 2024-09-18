@@ -9,7 +9,7 @@ import torch
 einops, _ = optional_import("einops")
 
 class PosEnc(nn.Module):
-    def __init__(self, out_channels, width=256, depth=8, L_embed=4):
+    def __init__(self, out_channels=1, width=256, depth=8, L_embed=10):
         super(PosEnc, self).__init__()
         self.width = width
         self.depth = depth
@@ -17,17 +17,21 @@ class PosEnc(nn.Module):
         
         self.layers = nn.ModuleList()
         self.dim = 3*2*L_embed + 1
+        self.pts_dim = self.dim
+        
         for i in range(depth):
-            if i==depth-1:
-                self.layers.append(self.dense(width, out_channels))
+            if i==5:
+                self.layers.append(self.dense(width+self.pts_dim, width))
             else:
-                self.layers.append(self.dense(self.dim, width, nn.ReLU))
+                self.layers.append(self.dense(self.dim, width))
                 self.dim = width
         
-    def dense(self, in_dim, out_dim, act=None):
+        self.layers.append(self.dense(width, out_channels))
+        
+    def dense(self, in_dim, out_dim):
         return nn.Sequential(
             nn.Linear(in_dim, out_dim),
-            None if act is None else act()
+            nn.ReLU()
         )
         
     def embedding(self, inp):
@@ -55,14 +59,17 @@ class PosEnc(nn.Module):
             mesh_grids.append(grid)
         
         mesh_grids = torch.stack(mesh_grids, dim=0)
-        mesh_grids = torch.reshape(mesh_grids, (B, -1, 3))
         
         mesh_grids = self.embedding(mesh_grids)
+        pts = mesh_grids
         for i, layer in enumerate(self.layers):
             mesh_grids = layer(mesh_grids)
+            if i==4:
+                mesh_grids=torch.cat([mesh_grids, pts], dim=-1)
             
-        mesh_grids = mesh_grids.reshape(B, d, h, w, -1).permute(0, 4, 1, 2, 3)
-        return mesh_grids    
+        mesh_grids = mesh_grids.permute(0, 4, 1, 2, 3)   #BDHW1->B1DHW
+            
+        return mesh_grids.contiguous()  
 
 class OSBlock(nn.Module):
     """Omni-scale feature learning block."""
